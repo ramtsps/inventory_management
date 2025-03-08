@@ -1,0 +1,22 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<div class="container">
+  <h2 class="mt-4 fw-bold text-danger text-center">🗑️ Delete Supplier</h2>
+
+  <div class="text-center">
+    <p class="fs-5">
+      Are you sure you want to delete <strong>{{ supplier.name }}</strong>?
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+      <a
+        href="{% url 'inventory:supplier_list' %}"
+        class="btn btn-secondary px-4"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}

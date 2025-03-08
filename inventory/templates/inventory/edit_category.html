@@ -1,0 +1,17 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container">
+  <h2 class="mt-4 fw-bold text-primary text-center">✏️ Edit Category</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Category Name</label>
+      {{ form.name }}
+    </div>
+    <button type="submit" class="btn btn-success">💾 Save Changes</button>
+    <a href="{% url 'inventory:category_list' %}" class="btn btn-secondary"
+      >⬅️ Cancel</a
+    >
+  </form>
+</div>
+{% endblock %}

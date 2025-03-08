@@ -1,0 +1,72 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<div class="container">
+  <h2 class="mt-4 fw-bold text-primary text-center">🏷️ Suppliers</h2>
+
+  <!-- Add Supplier Button -->
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'inventory:add_supplier' %}" class="btn btn-success">
+      ➕ Add Supplier
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover shadow-sm rounded-3">
+      <thead
+        class="text-white"
+        style="background: linear-gradient(135deg, #6a11cb, #2575fc)"
+      >
+        <tr>
+          <th>Supplier Name</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Address</th>
+          <th>Number of Products</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for supplier in suppliers %}
+        <tr>
+          <td>{{ supplier.name }}</td>
+          <td>{{ supplier.contact }}</td>
+          <td>{{ supplier.email }}</td>
+          <td>{{ supplier.address }}</td>
+          <td>
+            <a
+              href="{% url 'inventory:supplier_products' supplier.id %}"
+              class="fw-bold text-primary"
+            >
+              📦 {{ supplier.product_count }}
+            </a>
+          </td>
+          <td>
+            <a
+              href="{% url 'inventory:edit_supplier' supplier.id %}"
+              class="btn btn-warning btn-sm"
+            >
+              ✏️ Edit
+            </a>
+            <a
+              href="{% url 'inventory:delete_supplier' supplier.id %}"
+              class="btn btn-danger btn-sm"
+            >
+              🗑️ Delete
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">No suppliers available.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary mt-3">
+    ⬅️ Back to Product List
+  </a>
+</div>
+
+{% endblock %}

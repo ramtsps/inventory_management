@@ -1,0 +1,65 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<div class="container">
+  <h2 class="mt-4 fw-bold text-primary text-center">📁 Categories</h2>
+
+  <!-- Add Category Button -->
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'inventory:add_category' %}" class="btn btn-success">
+      ➕ Add Category
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover shadow-sm rounded-3">
+      <thead
+        class="text-white"
+        style="background: linear-gradient(135deg, #6a11cb, #2575fc)"
+      >
+        <tr>
+          <th>Category</th>
+          <th>Number of Products</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for category in categories %}
+        <tr>
+          <td>{{ category.name }}</td>
+          <td>{{ category.product_count }}</td>
+          <td>
+            <a
+              href="{% url 'inventory:category_products' category.id %}"
+              class="btn btn-primary btn-sm"
+            >
+              📜 View Products
+            </a>
+            <a
+              href="{% url 'inventory:edit_category' category.id %}"
+              class="btn btn-warning btn-sm"
+            >
+              ✏️ Edit
+            </a>
+            <a
+              href="{% url 'inventory:delete_category' category.id %}"
+              class="btn btn-danger btn-sm"
+            >
+              🗑️ Delete
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="text-center">No categories available.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary mt-3">
+    ⬅️ Back to Product List
+  </a>
+</div>
+
+{% endblock %}

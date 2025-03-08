@@ -1,0 +1,8 @@
+[
+  { "model": "inventory.Category", "fields": { "name": "Electronics" } },
+  { "model": "inventory.Category", "fields": { "name": "Clothing" } },
+  { "model": "inventory.Category", "fields": { "name": "Furniture" } },
+  { "model": "inventory.Category", "fields": { "name": "Groceries" } },
+  { "model": "inventory.Category", "fields": { "name": "Automotive" } },
+  { "model": "inventory.Category", "fields": { "name": "Sports" } }
+]

@@ -1,0 +1,21 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<div class="container">
+  <h2 class="mt-3 fw-bold text-primary">✏️ Edit Product</h2>
+
+  <!-- Scrollable Form Container -->
+  <div
+    class="shadow p-4 bg-white rounded"
+    style="max-height: 500px; overflow-y: auto"
+  >
+    <form method="post">
+      {% csrf_token %} {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">💾 Update</button>
+      <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary"
+        >❌ Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}

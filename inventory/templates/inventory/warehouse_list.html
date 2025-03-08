@@ -1,0 +1,35 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container">
+  <h2 class="mt-3 fw-bold text-primary">🏭 Warehouses</h2>
+  <a href="" class="btn btn-success mb-3">➕ Add Warehouse</a>
+
+  <div class="table-responsive">
+    <table class="table table-hover shadow-sm rounded-3">
+      <thead
+        class="text-white"
+        style="background: linear-gradient(135deg, #ffb703, #ff8800)"
+      >
+        <tr>
+          <th>Warehouse ID</th>
+          <th>Location</th>
+          <th>Capacity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for warehouse in warehouses %}
+        <tr>
+          <td>#{{ warehouse.id }}</td>
+          <td>{{ warehouse.location }}</td>
+          <td>{{ warehouse.capacity }}</td>
+          <td>
+            <a href="" class="btn btn-warning btn-sm">✏️ Edit</a>
+            <a href="" class="btn btn-danger btn-sm">🗑️ Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
