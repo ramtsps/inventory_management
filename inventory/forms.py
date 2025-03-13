@@ -1,25 +1,31 @@
 from django import forms
-from .models import Product,Category,Supplier
+from .models import Product,Category,Supplier,Order,Customer
 
 class ProductForm(forms.ModelForm):
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         empty_label="Select Category",
-        widget=forms.Select(attrs={"class": "form-control"})
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
     
-    supplier = forms.ModelChoiceField(  # Ensure supplier is a dropdown
+    supplier = forms.ModelChoiceField(
         queryset=Supplier.objects.all(),
         empty_label="Select Supplier",
-        widget=forms.Select(attrs={"class": "form-control"})
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    barcode = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "id": "barcodeInput", "readonly": "readonly"}),
     )
 
     class Meta:
         model = Product
         fields = [
-            "name", "stock_keeping_unit", "category", "quantity_in_stock",
-            "reorder_level", "supplier", "purchase_price",
-            "selling_price", "expiry_date", "warehouse_location"
+            "name", "stock_keeping_unit", "category", "supplier",
+            "quantity_in_stock", "reorder_level", "purchase_price",
+            "selling_price", "description", "warehouse_location",
+            "product_image", "barcode",
         ]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
@@ -28,12 +34,11 @@ class ProductForm(forms.ModelForm):
             "reorder_level": forms.NumberInput(attrs={"class": "form-control"}),
             "purchase_price": forms.NumberInput(attrs={"class": "form-control"}),
             "selling_price": forms.NumberInput(attrs={"class": "form-control"}),
-            "expiry_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "warehouse_location": forms.TextInput(attrs={"class": "form-control"}),
+            "product_image": forms.ClearableFileInput(attrs={"class": "form-control", "accept": "image/*"}),
+             "barcode": forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"}),
         }
-
-
-
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -59,3 +64,19 @@ class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ["name"]
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ["customer", "product", "quantity", "status", "payment_status", "expected_delivery_date", "shipping_details"]
+        widgets = {
+            "expected_delivery_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "shipping_details": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+class CustomerForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ["name", "email", "phone", "address"]
+        widgets = {
+            "address": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }

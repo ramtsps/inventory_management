@@ -1,0 +1,241 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<style>
+  .form-container {
+    width: 90%;
+    max-width: 800px;
+    height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scrollable-form {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+
+  /* Webcam styling */
+  #camera-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #video {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+  }
+
+  #captured-image {
+    display: none;
+    max-width: 100%;
+    margin-top: 10px;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+  }
+</style>
+
+<div class="container d-flex justify-content-center">
+  <div class="form-container shadow p-4 bg-white rounded">
+    <h2 class="fw-bold text-primary">➕ Add New Product</h2>
+
+    <div class="scrollable-form">
+      <form method="POST" enctype="multipart/form-data" id="product-form">
+        {% csrf_token %}
+
+        <!-- Display Form Errors -->
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          <strong>Please fix the following errors:</strong>
+          <ul>
+            {% for field, errors in form.errors.items %}
+            <li>{{ field|capfirst }}: {{ errors|striptags }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- Render Form Fields -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Name</label>
+          {{ form.name }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Stock Keeping Unit (SKU)</label>
+          {{ form.stock_keeping_unit }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Category</label>
+          {{ form.category }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Supplier</label>
+          {{ form.supplier }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Quantity in Stock</label>
+          {{ form.quantity_in_stock }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Reorder Level</label>
+          {{ form.reorder_level }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Purchase Price</label>
+          {{ form.purchase_price }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Selling Price</label>
+          {{ form.selling_price }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Description</label>
+          {{ form.description }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Warehouse Location</label>
+          {{ form.warehouse_location }}
+        </div>
+
+        <!-- Hidden input for captured image -->
+        <input type="hidden" name="captured_image" id="captured_image_input" />
+
+        <!-- Webcam Capture -->
+        <div id="camera-container" class="mb-3">
+          <label class="form-label fw-bold">Capture Product Image</label>
+          <video id="video" autoplay></video>
+          <button type="button" id="capture-btn" class="btn btn-primary mt-2">
+            📸 Capture Image
+          </button>
+          <canvas id="canvas" style="display: none"></canvas>
+          <img id="captured-image" alt="Captured Product Image" />
+        </div>
+
+        <!-- QR Code Generation -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Generated QR Code</label><br />
+          <img
+            id="qr-image"
+            src=""
+            alt="QR Code"
+            class="img-fluid"
+            style="display: none"
+          />
+          <button
+            type="button"
+            id="generate-qr-btn"
+            class="btn btn-warning"
+            data-url="{% url 'inventory:generate_qr_code' %}"
+          >
+            🔄 Generate QR Code
+          </button>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-success">
+          ✅ Add Product
+        </button>
+        <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary"
+          >Cancel</a
+        >
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const video = document.getElementById("video");
+    const captureBtn = document.getElementById("capture-btn");
+    const canvas = document.getElementById("canvas");
+    const capturedImage = document.getElementById("captured-image");
+    const capturedImageInput = document.getElementById("captured_image_input");
+    const submitBtn = document.getElementById("submit-btn");
+    const qrImage = document.getElementById("qr-image");
+    const generateQrBtn = document.getElementById("generate-qr-btn");
+    const skuField = document.getElementById("id_stock_keeping_unit");
+
+    function getCSRFToken() {
+      return document.querySelector("[name=csrfmiddlewaretoken]").value;
+    }
+
+    // Start Webcam Stream
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        console.error("Error accessing webcam:", err);
+      });
+
+    // Capture Image from Webcam
+    captureBtn.addEventListener("click", function () {
+      const context = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageData = canvas.toDataURL("image/png");
+      capturedImage.src = imageData;
+      capturedImage.style.display = "block";
+
+      // Store the image data in the hidden input field
+      capturedImageInput.value = imageData;
+    });
+
+    generateQrBtn.addEventListener("click", function () {
+      const url = generateQrBtn.getAttribute("data-url");
+
+      // Collect all form data
+      const productData = {
+        name: document.getElementById("id_name").value.trim(),
+        sku: document.getElementById("id_stock_keeping_unit").value.trim(),
+        category: document.getElementById("id_category").value.trim(),
+        supplier: document.getElementById("id_supplier").value.trim(),
+        quantity: document.getElementById("id_quantity_in_stock").value.trim(),
+        price: document.getElementById("id_selling_price").value.trim(),
+        location: document.getElementById("id_warehouse_location").value.trim(),
+        description: document.getElementById("id_description").value.trim(),
+      };
+
+      if (!productData.sku) {
+        alert("Please enter a SKU before generating the QR code.");
+        return;
+      }
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify(productData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            qrImage.src = data.qr_code_url;
+            qrImage.style.display = "block";
+          } else {
+            alert("Error: " + data.error);
+          }
+        })
+        .catch((error) => alert("QR Code generation failed: " + error));
+    });
+  });
+</script>
+
+{% endblock %}

@@ -1,6 +1,9 @@
 from django.urls import path
 from . import views
 from .views import *
+from django.conf import settings
+from django.conf.urls.static import static
+
 app_name = 'inventory'
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -23,5 +26,19 @@ urlpatterns = [
     path("suppliers/delete/<int:supplier_id>/", delete_supplier, name="delete_supplier"),
      path("suppliers/<int:supplier_id>/products/", views.supplier_products, name="supplier_products"),
      path("low-stock/", views.low_stock_products, name="low_stock_products"),
-
+ path("generate_qr_code/", generate_qr_code, name="generate_qr_code"),
+ path('products/<int:product_id>/', views.product_detail, name='product_detail'),
+   path("orders/", order_list, name="order_list"),
+    path("orders/create/", create_order, name="create_order"),
+    path("orders/<int:order_id>/", order_detail, name="order_detail"),
+    path("orders/<int:order_id>/status/<str:status>/", update_order_status, name="update_order_status"),
+    path("orders/pending/", pending_orders, name="pending_orders"),
+    path("orders/delivered/", delivered_orders, name="delivered_orders"),
+    path("cart/", cart_view, name="cart"),
+    path("checkout/", checkout, name="checkout"),
+path("customers/add/", views.add_customer, name="add_customer"),
+path("update-payment-status/<int:order_id>/", update_payment_status, name="update_payment_status"),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

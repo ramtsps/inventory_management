@@ -1,12 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-class Supplier(models.Model):
-    name = models.CharField(max_length=255)
-    contact_info = models.TextField()
-    address = models.TextField()
 
-    def __str__(self):
-        return self.name
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -22,23 +16,29 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    stock_keeping_unit  = models.CharField(max_length=100)
-    category = models.ForeignKey('Category', on_delete=models.CASCADE)  # Fetch from Category table
+    stock_keeping_unit = models.CharField(max_length=100)
+    category = models.ForeignKey('Category', on_delete=models.CASCADE)
     quantity_in_stock = models.PositiveIntegerField()
     reorder_level = models.PositiveIntegerField(default=10)
-    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)  # Fetch from Supplier table
+    supplier = models.ForeignKey('Supplier', on_delete=models.SET_NULL, null=True, blank=True)
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
-    expiry_date = models.DateField(null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
     warehouse_location = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    product_image = models.ImageField(upload_to="product_images/", null=True, blank=True)
+    barcode = models.ImageField(upload_to="qrcodes/", blank=True, null=True)
+
+
     def __str__(self):
         return self.name
-
 
 class Customer(models.Model):
     name = models.CharField(max_length=255)
