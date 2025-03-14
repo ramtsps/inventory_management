@@ -80,3 +80,5 @@ class CustomerForm(forms.ModelForm):
         widgets = {
             "address": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
+
+

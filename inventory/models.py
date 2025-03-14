@@ -1,6 +1,8 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+import uuid
+from django.utils.timezone import now
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -98,14 +100,32 @@ class StockMovement(models.Model):
 
 
 
-class CustomUser(AbstractUser):
+
+
+import uuid
+from django.db import models
+from django.utils.timezone import now
+
+class Users(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('warehouse_staff', 'Warehouse Staff'),
         ('manager', 'Manager'),
+        ('customer', 'Customer'),
     ]
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='warehouse_staff')
+    customer_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    mobile_number = models.CharField(max_length=15, unique=True)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255)  # Store hashed password
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
+    working_warehouse = models.CharField(max_length=255, blank=True, null=True)
+    register_date = models.DateTimeField(default=now)
+
+    class Meta:
+        db_table = "Users"  # Keep table name as "Users"
 
     def __str__(self):
-        return self.username
+        return self.name
+

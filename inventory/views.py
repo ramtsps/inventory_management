@@ -461,8 +461,121 @@ def add_customer(request):
         form = CustomerForm()
     
     return render(request, "inventory/customer/add_customer.html", {"form": form})
-def warehouse_list(request):
-    return render(request, 'inventory/sideBar/warehouse_list.html')
 
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Warehouse
+from .models import Warehouse, Product
+
+def warehouse_list(request):
+    warehouses = Warehouse.objects.all()
+    warehouse_data = []
+    
+    for warehouse in warehouses:
+        products = Product.objects.filter().values("name", "stock_keeping_unit")
+        # print("stoked", products)
+        warehouse_data.append({"warehouse": warehouse, "products": list(products)})
+
+    return render(request, 'inventory/warehouse/warehouse_list.html', {'warehouses': warehouses})
+
+
+from django.http import JsonResponse
+from .models import Product, Warehouse
+from django.core.exceptions import ObjectDoesNotExist
+def warehouse_stock(request, warehouse_id):
+    try:
+        warehouse = Warehouse.objects.get(id=warehouse_id)
+        products = Product.objects.filter().values("name", "stock_keeping_unit")
+
+        # Count distinct categories in the warehouse
+        category_count = Category.objects.filter().distinct().count()
+        print("caty",category_count)
+        return JsonResponse({
+            "products": list(products),
+            "total_categories": category_count
+        })
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Warehouse not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def add_warehouse(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        Warehouse.objects.create(name=data["name"], location=data["location"])
+        return JsonResponse({"success": True})
+@csrf_exempt
+def edit_warehouse(request, warehouse_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            warehouse = Warehouse.objects.get(id=warehouse_id)
+            warehouse.name = data['name']
+            warehouse.location = data['location']
+            warehouse.save()
+            return JsonResponse({"success": True})
+        except Warehouse.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Warehouse not found"}, status=404)
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+
+@csrf_exempt
+def delete_warehouse(request, warehouse_id):
+    if request.method == "POST":
+        try:
+            warehouse = Warehouse.objects.get(id=warehouse_id)
+            warehouse.delete()
+            return JsonResponse({"success": True})
+        except Warehouse.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Warehouse not found"}, status=404)
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.hashers import make_password
+from .models import Users  # Import Users model
 def user_list(request):
-    return render(request, 'inventory/sideBar/user_list.html')
+    users = Users.objects.all()  # Fetch all users
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        mobile_number = request.POST.get("mobile_number")
+        password = request.POST.get("password")
+        role = request.POST.get("role", "warehouse_staff")
+
+        user = Users(
+            name=name,
+            email=email,
+            mobile_number=mobile_number,
+            password=make_password(password),
+            role=role
+        )
+        user.save()  # Ensure the user is saved properly
+
+        return redirect("inventory:user_list") 
+    return render(request, "inventory/sideBar/user_list.html", {"users": users})
+
+def edit_user(request, user_id):
+    user = get_object_or_404(Users, id=user_id)
+
+    if request.method == "POST":
+        user.name = request.POST.get("name")
+        user.email = request.POST.get("email")
+        user.mobile_number = request.POST.get("mobile_number")
+        user.role = request.POST.get("role")
+
+        new_password = request.POST.get("password")
+        if new_password:
+            user.password = make_password(new_password)  # Update password if provided
+
+        user.save()
+        return redirect("user_list")
+
+    return render(request, "inventory/sideBar/user_list.html", {"users": Users.objects.all()})
+
+def delete_user(request, user_id):
+    user = get_object_or_404(Users, id=user_id)
+    user.delete()
+    return redirect("user_list")

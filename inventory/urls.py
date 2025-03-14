@@ -38,6 +38,16 @@ urlpatterns = [
     path("checkout/", checkout, name="checkout"),
 path("customers/add/", views.add_customer, name="add_customer"),
 path("update-payment-status/<int:order_id>/", update_payment_status, name="update_payment_status"),
+path('warehouses/', warehouse_list, name='warehouse_list'),
+    path('warehouses/add/', add_warehouse, name='add_warehouse'),  # ✅ Ensure this matches the reverse lookup
+   path('warehouses/edit/<int:warehouse_id>/', edit_warehouse, name='edit_warehouse'),
+
+path('warehouses/<int:warehouse_id>/stock/', views.warehouse_stock, name='warehouse_stock'),
+  path('warehouses/delete/<int:warehouse_id>/', delete_warehouse, name='delete_warehouse'),
+
+    path("users/edit/<int:user_id>/", edit_user, name="edit_user"),
+    path("users/delete/<int:user_id>/", delete_user, name="delete_user"),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
