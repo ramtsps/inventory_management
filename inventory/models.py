@@ -68,14 +68,23 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     order_date = models.DateTimeField(auto_now_add=True)
     expected_delivery_date = models.DateField(null=True, blank=True)
     shipping_details = models.TextField(blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        """ Ensure total price is calculated before saving. """
+        if self.price and self.quantity:
+            self.total_price = self.price * self.quantity
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Order {self.id} - {self.product.name}"
+
 class Warehouse(models.Model):
     name = models.CharField(max_length=255)
     location = models.TextField()
@@ -114,7 +123,7 @@ class Users(models.Model):
         ('customer', 'Customer'),
     ]
 
-    customer_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    customer_id = models.PositiveIntegerField(unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     mobile_number = models.CharField(max_length=15, unique=True)
     email = models.EmailField(unique=True)
@@ -125,6 +134,13 @@ class Users(models.Model):
 
     class Meta:
         db_table = "Users"  # Keep table name as "Users"
+
+    def save(self, *args, **kwargs):
+        """Set the first customer_id as 1001 and auto-increment."""
+        if not self.customer_id:
+            last_user = Users.objects.order_by('-customer_id').first()
+            self.customer_id = int(last_user.customer_id) + 1 if last_user else 1001
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -356,43 +356,46 @@ import json
 from .models import Order
 
 @csrf_exempt  # Allow AJAX request without CSRF token (optional if using headers)
-def update_payment_status(request, order_id):
+def update_payment_status(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            new_status = data.get("payment_status")
+        order_id = request.POST.get("order_id")
+        payment_status = request.POST.get("payment_status")
 
-            # Update order payment status
-            order = Order.objects.get(id=order_id)
-            order.payment_status = new_status
-            order.save()
+        order = Order.objects.get(id=order_id)
+        order.payment_status = payment_status
+        order.save()
 
-            return JsonResponse({"success": True, "new_status": new_status})
-        except Order.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Order not found"})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
+        return JsonResponse({"success": True})
 
-    return JsonResponse({"success": False, "error": "Invalid request"})
+    return JsonResponse({"success": False}, status=400)
 
+def order_success(request):
+    invoice_url = request.GET.get("invoice_url", "")
+    return render(request, "inventory/order_success.html", {"invoice_url": invoice_url})
 def create_order(request):
     if request.method == "POST":
         customer_id = request.POST.get("customer")
         product_id = request.POST.get("product")
-        quantity = request.POST.get("quantity")
+        quantity = int(request.POST.get("quantity"))
         status = request.POST.get("status")
         payment_status = request.POST.get("payment_status")
         expected_delivery_date = request.POST.get("expected_delivery_date")
         shipping_details = request.POST.get("shipping_details")
         customer_address = request.POST.get("customer_address")
 
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
+        customer = get_object_or_404(Customer, id=customer_id)
+        product = get_object_or_404(Product, id=product_id)
 
-        Order.objects.create(
+        # Get the product price at the time of ordering
+        price = product.selling_price
+        total_price = price * quantity
+
+        order = Order.objects.create(
             customer=customer,
             product=product,
             quantity=quantity,
+            price=price,
+            total_price=total_price,
             status=status,
             payment_status=payment_status,
             expected_delivery_date=expected_delivery_date if expected_delivery_date else None,
@@ -400,7 +403,8 @@ def create_order(request):
         )
 
         messages.success(request, "Order created successfully!")
-        return redirect("inventory:order_list")
+
+        return redirect("inventory:generate_invoice", order.id)
 
     customers = Customer.objects.all()
     products = Product.objects.all()
@@ -410,8 +414,10 @@ def create_order(request):
         "products": products
     })
 
+
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    print("`order_detail`", order.order_date)
     return render(request, "inventory/order/order_detail.html", {"order": order})
 
 def update_order_status(request, order_id, status):
@@ -457,6 +463,9 @@ def add_customer(request):
             form.save()
             messages.success(request, "Customer added successfully!")
             return redirect("inventory:order_list")
+        else:
+            messages.error(request, "There was an error in the form. Please check the fields.")
+            print(form.errors)  # Debugging
     else:
         form = CustomerForm()
     
@@ -579,3 +588,69 @@ def delete_user(request, user_id):
     user = get_object_or_404(Users, id=user_id)
     user.delete()
     return redirect("user_list")
+
+
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+import os
+from django.conf import settings
+from django.utils.timezone import now
+from .models import Order
+from django.urls import reverse
+def generate_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    # Define file path
+    invoice_filename = f"invoice_{order.id}_{now().strftime('%Y%m%d%H%M%S')}.pdf"
+    invoice_path = os.path.join(settings.MEDIA_ROOT, "invoices", invoice_filename)
+
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(invoice_path), exist_ok=True)
+
+    # Create PDF
+    p = canvas.Canvas(invoice_path, pagesize=A4)
+    width, height = A4
+
+    # Invoice Title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, height - 50, "Invoice")
+
+    # Order Details
+    p.setFont("Helvetica", 12)
+    p.drawString(50, height - 100, f"Order ID: {order.id}")
+    p.drawString(50, height - 120, f"Customer: {order.customer.name}")
+    p.drawString(50, height - 140, f"Phone: {order.customer.phone}")
+    p.drawString(50, height - 160, f"Address: {order.customer.address}")
+
+    # Product Details
+    p.drawString(50, height - 200, f"Product: {order.product.name}")
+    p.drawString(50, height - 220, f"Quantity: {order.quantity}")
+    p.drawString(50, height - 240, f"Price per unit: Rs: {order.product.selling_price}")
+    p.drawString(50, height - 260, f"Total Price: Rs: {order.quantity * order.product.selling_price}")
+
+    # Payment Status
+    p.drawString(50, height - 300, f"Payment Status: {order.payment_status}")
+    p.drawString(50, height - 320, f"Order Status: {order.status}")
+
+    # Expected Delivery Date
+    if order.expected_delivery_date:
+        p.drawString(50, height - 360, f"Expected Delivery: {order.expected_delivery_date}")
+
+    # Footer
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawString(50, height - 400, "Thank you for your order!")
+
+    # Save the PDF
+    p.showPage()
+    p.save()
+
+    # Get the relative URL of the invoice
+    invoice_url = f"/media/invoices/{invoice_filename}"
+
+    
+    
+    return redirect(reverse("inventory:order_success") + f"?invoice_url={invoice_url}")
+

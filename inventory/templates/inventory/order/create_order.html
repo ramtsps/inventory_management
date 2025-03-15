@@ -22,12 +22,14 @@
           name="customer"
           id="customer"
           class="form-control"
-          onchange="fetchCustomerAddress()"
+          onchange="fetchCustomerDetails()"
         >
           <option value="" selected disabled>-- Select Customer --</option>
           {% for customer in customers %}
           <option
             value="{{ customer.id }}"
+            data-name="{{ customer.name }}"
+            data-phone="{{ customer.phone }}"
             data-address="{{ customer.address }}"
           >
             {{ customer.name }}
@@ -52,9 +54,10 @@
       <div class="mb-3">
         <label for="product" class="form-label">Product</label>
         <select name="product" id="product" class="form-control">
+          <option value="" selected disabled>-- Select Product --</option>
           {% for product in products %}
           <option value="{{ product.id }}">
-            {{ product.name }} - ${{ product.price }}
+            {{ product.name }} - ₹{{ product.selling_price }}
           </option>
           {% endfor %}
         </select>
@@ -116,20 +119,60 @@
         ></textarea>
       </div>
 
+      <div class="mb-3">
+        <label for="total_price" class="form-label">Total Price (₹)</label>
+        <input type="text" id="total_price" class="form-control" readonly />
+      </div>
+
       <button type="submit" class="btn btn-success">✅ Place Order</button>
+      {% if order %}
+      <a
+        href="{% url 'inventory:generate_invoice' order.id %}"
+        class="btn btn-primary"
+      >
+        📄 Download Invoice
+      </a>
+      {% endif %}
     </form>
   </div>
 </div>
-
 <script>
-  function fetchCustomerAddress() {
+  function fetchCustomerDetails() {
     let customerSelect = document.getElementById("customer");
     let addressField = document.getElementById("customer_address");
+    let shippingDetailsField = document.getElementById("shipping_details");
     let selectedOption = customerSelect.options[customerSelect.selectedIndex];
 
     if (selectedOption) {
-      addressField.value = selectedOption.getAttribute("data-address");
+      let name = selectedOption.getAttribute("data-name");
+      let phone = selectedOption.getAttribute("data-phone");
+      let address = selectedOption.getAttribute("data-address");
+      addressField.value = address;
+      shippingDetailsField.value = `${name}, ${phone}, ${address}`;
     }
   }
+
+  function calculateTotalPrice() {
+    let productSelect = document.getElementById("product");
+    let quantityInput = document.getElementById("quantity");
+    let totalPriceField = document.getElementById("total_price");
+
+    let selectedOption = productSelect.options[productSelect.selectedIndex];
+    let productPrice = selectedOption
+      ? parseFloat(selectedOption.text.split("₹")[1])
+      : 0;
+    let quantity = quantityInput.value ? parseInt(quantityInput.value) : 1;
+
+    let totalPrice = productPrice * quantity;
+    totalPriceField.value = totalPrice.toFixed(2); // Display price with 2 decimal places
+  }
+
+  document
+    .getElementById("product")
+    .addEventListener("change", calculateTotalPrice);
+  document
+    .getElementById("quantity")
+    .addEventListener("input", calculateTotalPrice);
 </script>
+
 {% endblock %}

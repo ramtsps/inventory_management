@@ -67,7 +67,7 @@ class CategoryForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ["customer", "product", "quantity", "status", "payment_status", "expected_delivery_date", "shipping_details"]
+        fields = ["customer", "product", "quantity", "status", "payment_status","expected_delivery_date", "shipping_details"]
         widgets = {
             "expected_delivery_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "shipping_details": forms.Textarea(attrs={"class": "form-control", "rows": 3}),

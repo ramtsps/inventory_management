@@ -37,7 +37,7 @@ urlpatterns = [
     path("cart/", cart_view, name="cart"),
     path("checkout/", checkout, name="checkout"),
 path("customers/add/", views.add_customer, name="add_customer"),
-path("update-payment-status/<int:order_id>/", update_payment_status, name="update_payment_status"),
+path("update_payment_status/", update_payment_status, name="update_payment_status"),
 path('warehouses/', warehouse_list, name='warehouse_list'),
     path('warehouses/add/', add_warehouse, name='add_warehouse'),  # ✅ Ensure this matches the reverse lookup
    path('warehouses/edit/<int:warehouse_id>/', edit_warehouse, name='edit_warehouse'),
@@ -47,8 +47,11 @@ path('warehouses/<int:warehouse_id>/stock/', views.warehouse_stock, name='wareho
 
     path("users/edit/<int:user_id>/", edit_user, name="edit_user"),
     path("users/delete/<int:user_id>/", delete_user, name="delete_user"),
-
+path("create_order/", create_order, name="create_order"),
+    path("generate_invoice/<int:order_id>/", generate_invoice, name="generate_invoice"),
+    path("order_success/", order_success, name="order_success"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 

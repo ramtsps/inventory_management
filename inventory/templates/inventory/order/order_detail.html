@@ -9,15 +9,17 @@
       <p><strong>Product:</strong> {{ order.product }}</p>
       <p><strong>Quantity:</strong> {{ order.quantity }}</p>
       <p><strong>Order Date:</strong> {{ order.order_date }}</p>
+      <p><strong>Price per unit:</strong> ₹{{ order.price }}</p>
+      <p><strong>Total Price:</strong> ₹{{ order.total_price }}</p>
       <p>
-        <strong>Expected Delivery:</strong> {{ order.expected_delivery_date}}
+        <strong>Expected Delivery:</strong> {{ order.expected_delivery_date }}
       </p>
       <p><strong>Shipping Details:</strong> {{ order.shipping_details }}</p>
 
       <p>
         <strong>Status:</strong>
         <span
-          class="badge {% if order.status == 'Pending' %} bg-warning text-dark {% elif order.status == 'Shipped' %} bg-info {% elif order.status == 'Delivered' %} bg-success {% else %} bg-danger {% endif %}"
+          class="badge {% if order.status == 'pending' %} bg-warning text-dark {% elif order.status == 'shipped' %} bg-info {% elif order.status == 'delivered' %} bg-success {% else %} bg-danger {% endif %}"
         >
           {{ order.status }}
         </span>
@@ -26,7 +28,7 @@
       <p>
         <strong>Payment Status:</strong>
         <span
-          class="badge {% if order.payment_status == 'Paid' %} bg-success {% elif order.payment_status == 'Unpaid' %} bg-danger {% else %} bg-warning {% endif %}"
+          class="badge {% if order.payment_status == 'paid' %} bg-success {% elif order.payment_status == 'unpaid' %} bg-danger {% else %} bg-warning {% endif %}"
         >
           {{ order.payment_status }}
         </span>
@@ -34,20 +36,30 @@
 
       <div class="mt-3">
         <a
-          href="{% url 'inventory:update_order_status' order.id 'Shipped' %}"
+          href="{% url 'inventory:update_order_status' order.id 'shipped' %}"
           class="btn btn-info"
           >📦 Mark as Shipped</a
         >
         <a
-          href="{% url 'inventory:update_order_status' order.id 'Delivered' %}"
+          href="{% url 'inventory:update_order_status' order.id 'delivered' %}"
           class="btn btn-success"
           >✅ Mark as Delivered</a
         >
         <a
-          href="{% url 'inventory:update_order_status' order.id 'Canceled' %}"
+          href="{% url 'inventory:update_order_status' order.id 'canceled' %}"
           class="btn btn-danger"
           >❌ Cancel Order</a
         >
+      </div>
+
+      <!-- Invoice Download Button -->
+      <div class="mt-3">
+        <a
+          href="{% url 'inventory:generate_invoice' order.id %}"
+          class="btn btn-primary"
+        >
+          📄 Download Invoice
+        </a>
       </div>
 
       <a href="{% url 'inventory:order_list' %}" class="btn btn-secondary mt-3"

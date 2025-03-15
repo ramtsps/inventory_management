@@ -16,6 +16,18 @@
     background-color: #ffc107; /* Bootstrap Warning Yellow */
     color: black;
   }
+  .table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .table thead {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    z-index: 10;
+  }
+  
 </style>
 
 <div class="container">
@@ -162,6 +174,31 @@
 
 <!-- JavaScript for Search, Date, and Filters -->
 <script>
+  document.querySelectorAll(".payment-status-dropdown").forEach((dropdown) => {
+    dropdown.addEventListener("change", function () {
+      let orderId = this.closest("form").getAttribute("data-order-id");
+      let paymentStatus = this.value;
+      let form = this.closest("form");
+  
+      fetch("{% url 'inventory:update_payment_status' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `order_id=${orderId}&payment_status=${paymentStatus}`,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            console.log("Payment status updated successfully");
+            window.location.reload();
+          }
+        })
+        .catch((error) => console.error("Error updating payment status:", error));
+    });
+  });
+  
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("searchFilter").addEventListener("input", filterOrders);
     document.getElementById("statusFilter").addEventListener("change", filterOrders);
