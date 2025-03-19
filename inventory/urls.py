@@ -51,7 +51,7 @@ path("create_order/", create_order, name="create_order"),
     path("generate_invoice/<int:order_id>/", generate_invoice, name="generate_invoice"),
     path("order_success/", order_success, name="order_success"),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
