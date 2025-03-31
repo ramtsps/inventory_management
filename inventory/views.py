@@ -559,18 +559,25 @@ def checkout(request):
 def add_customer(request):
     if request.method == "POST":
         form = CustomerForm(request.POST)
+
+        # ✅ Mobile Number Validation: 10 digits, starts with 6-9
+        phone = request.POST.get("phone")
+        if not re.fullmatch(r"^[6-9]\d{9}$", phone):
+            messages.error(request, "Invalid Mobile Number! Must be 10 digits & start with 6-9.")
+            return render(request, "inventory/customer/add_customer.html", {"form": form})
+
         if form.is_valid():
             form.save()
             messages.success(request, "Customer added successfully!")
             return redirect("inventory:order_list")
         else:
             messages.error(request, "There was an error in the form. Please check the fields.")
-            print(form.errors)  # Debugging
+            print(form.errors)  # Debugging (Remove in production)
+
     else:
         form = CustomerForm()
     
     return render(request, "inventory/customer/add_customer.html", {"form": form})
-
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -777,6 +784,7 @@ def delete_warehouse(request, warehouse_id):
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
 from .models import Users  # Import Users model
+import re
 def user_list(request):
     users = Users.objects.all()  # Fetch all users
 
@@ -787,17 +795,26 @@ def user_list(request):
         password = request.POST.get("password")
         role = request.POST.get("role", "warehouse_staff")
 
+        # ✅ Mobile Number Validation: 10 digits only
+        if not re.fullmatch(r"^[6-9]\d{9}$", mobile_number):  
+            messages.error(request, "Invalid Mobile Number! Must be 10 digits & start with 6-9.")
+            return redirect("inventory:user_list")
+
+        # Save the user if valid
         user = Users(
             name=name,
             email=email,
             mobile_number=mobile_number,
-            password=password,
+            password=password,  # You should hash this before saving
             role=role
         )
-        user.save()  # Ensure the user is saved properly
+        user.save()
 
+        messages.success(request, "User added successfully!")
         return redirect("inventory:user_list") 
+
     return render(request, "inventory/sideBar/user_list.html", {"users": users})
+
 
 from django.db import IntegrityError
 def edit_user(request, customer_id):
@@ -807,21 +824,32 @@ def edit_user(request, customer_id):
         try:
             user.name = request.POST.get("name")
             user.email = request.POST.get("email")
-            user.mobile_number = request.POST.get("mobile_number")
             user.role = request.POST.get("role")
 
+            # ✅ Mobile Number Validation: 10 digits, starts with 6-9
+            mobile_number = request.POST.get("mobile_number")
+            if not re.fullmatch(r"^[6-9]\d{9}$", mobile_number):
+                messages.error(request, "Invalid Mobile Number! Must be 10 digits & start with 6-9.")
+                return redirect("inventory:user_list")  # Stop update if invalid
+
+            user.mobile_number = mobile_number  # Assign validated number
+
+            # ✅ Secure Password Handling
             new_password = request.POST.get("password")
-            if new_password:
-                user.password = new_password  # Update password if provided
+            if new_password:  
+                user.password = make_password(new_password)  # Hash password before saving
 
             user.save()
             messages.success(request, "User updated successfully!")
+
         except IntegrityError:
             messages.error(request, "Email already exists! Please use a different email.")
 
         return redirect("inventory:user_list")  # Redirect to user list after updating
 
     return render(request, "inventory/sideBar/user_list.html", {"users": Users.objects.all()})
+
+
 def delete_user(request, customer_id):
     user = get_object_or_404(Users, customer_id=customer_id)  # Get user by customer_id
     user.delete()
