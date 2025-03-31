@@ -1,0 +1,79 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container mt-4">
+  <!-- Top Navbar with Logout Button -->
+  <div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-bold text-primary">{{ warehouse.name }} - Products</h2>
+
+    <!-- Logout Button (Top Right) -->
+    <a href="{% url 'inventory:warehouse_logout' %}" class="btn btn-danger"
+      >🚪 Logout</a
+    >
+  </div>
+
+  <a
+    href="{% url 'inventory:add_product' warehouse.id %}"
+    class="btn btn-primary mt-3"
+  >
+    ➕ Add Product
+  </a>
+
+  <table class="table table-striped mt-3">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Stock</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>
+          <a
+            href="{% url 'inventory:warehouse_product_detail' product.id %}"
+            class="text-decoration-none"
+          >
+            {{ product.name }}
+          </a>
+        </td>
+        <td>{{ product.category }}</td>
+        <td>{{ product.stock }}</td>
+        <td>
+          <a
+            href="{% url 'inventory:warehouse_edit_product' product.id %}"
+            class="btn btn-warning"
+          >
+            ✏️ Edit
+          </a>
+          <a
+            href="{% url 'inventory:warehouse_delete_product' product.id %}"
+            class="btn btn-danger"
+          >
+            🗑️ Delete
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Redirect after Logout -->
+  <!-- <script>
+    document
+      .querySelector(".btn-danger")
+      .addEventListener("click", function (event) {
+        event.preventDefault(); // Prevent default link behavior
+        fetch("{% url 'inventory:logout' %}", { method: "GET" }) // Perform logout
+          .then(() => {
+            fetch("{% url 'inventory:clear_warehouse_session' %}", {
+              method: "GET",
+            }) // Clear session
+              .then(() => {
+                window.location.href = "{% url 'inventory:warehouse_list' %}"; // Redirect after logout
+              });
+          });
+      });
+  </script> -->
+</div>
+{% endblock %}

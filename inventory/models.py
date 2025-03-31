@@ -85,12 +85,6 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.product.name}"
 
-class Warehouse(models.Model):
-    name = models.CharField(max_length=255)
-    location = models.TextField()
-
-    def __str__(self):
-        return self.name
 
 class StockMovement(models.Model):
     MOVEMENT_TYPE = [
@@ -114,6 +108,7 @@ class StockMovement(models.Model):
 import uuid
 from django.db import models
 from django.utils.timezone import now
+from django.contrib.auth.hashers import make_password
 
 class Users(models.Model):
     ROLE_CHOICES = [
@@ -136,12 +131,71 @@ class Users(models.Model):
         db_table = "Users"  # Keep table name as "Users"
 
     def save(self, *args, **kwargs):
-        """Set the first customer_id as 1001 and auto-increment."""
+        """Hash password before saving and auto-increment customer_id."""
         if not self.customer_id:
             last_user = Users.objects.order_by('-customer_id').first()
             self.customer_id = int(last_user.customer_id) + 1 if last_user else 1001
+
+        if not self.password.startswith("pbkdf2_sha256$"):  # Avoid re-hashing
+            self.password = self.password
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
+class Warehouse(models.Model):
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('electronics', 'Electronics'),
+        ('medical', 'Medical'),
+        ('agricultural', 'Agricultural'),
+        ('technology', 'Technology'),
+        ('all', 'All'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='all')
+
+    def __str__(self):
+        return self.name
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+
+class WarehouseProduct(models.Model):
+    name = models.CharField(max_length=100)
+    sku = models.CharField(max_length=50, unique=True)
+    category = models.ForeignKey("Category", on_delete=models.CASCADE)
+    supplier = models.CharField(max_length=100)
+    stock = models.PositiveIntegerField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    warehouse = models.ForeignKey("Warehouse", on_delete=models.CASCADE, related_name="products")
+    qr_code = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
+    image = models.ImageField(upload_to="product_images/", blank=True, null=True)
+
+    class Meta:
+        db_table = "warehouse_product"
+
+    def __str__(self):
+        return f"{self.name} - {self.warehouse.name}"
+
+    def generate_qr_code(self):
+        """Generate and save a QR code for the product."""
+        qr_data = f"Product: {self.name}\nSKU: {self.sku}\nCategory: {self.category}\nSupplier: {self.supplier}\nStock: {self.stock}\nPrice: {self.price}\nLocation: {self.location}\nDescription: {self.description}\nWarehouse: {self.warehouse.name}"
+        qr = qrcode.make(qr_data)
+
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+
+        # Save QR code to the ImageField
+        filename = f"qr_{self.sku}.png"
+        self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+    def save(self, *args, **kwargs):
+        """Override save method to generate QR code before saving."""
+        self.generate_qr_code()
+        super().save(*args, **kwargs)

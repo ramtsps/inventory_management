@@ -19,6 +19,7 @@
           <th>Warehouse ID</th>
           <th>Name</th>
           <th>Location</th>
+          <th>Category</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -28,12 +29,14 @@
           <td>#{{ warehouse.id }}</td>
           <td>{{ warehouse.name }}</td>
           <td>{{ warehouse.location }}</td>
+          <td>{{ warehouse.category }}</td>
           <td>
             <button
               class="btn btn-warning btn-sm edit-warehouse"
               data-id="{{ warehouse.id }}"
               data-name="{{ warehouse.name }}"
               data-location="{{ warehouse.location }}"
+              data-category="{{ warehouse.category }}"
               data-bs-toggle="modal"
               data-bs-target="#editWarehouseModal"
             >
@@ -52,7 +55,6 @@
     </table>
   </div>
 </div>
-
 <!-- Add Warehouse Modal -->
 <div
   class="modal fade"
@@ -92,6 +94,15 @@
               id="warehouseLocation"
               required
             />
+          </div>
+          <div class="mb-3">
+            <label for="warehouseCategory" class="form-label">Category</label>
+            <select class="form-control" id="warehouseCategory" required>
+              <option value="electronics">Electronics</option>
+              <option value="medical">Medical</option>
+              <option value="agricultural">Agricultural</option>
+              <option value="technology">Technology</option>
+            </select>
           </div>
           <button type="submit" class="btn btn-primary w-100">
             Add Warehouse
@@ -147,6 +158,17 @@
               required
             />
           </div>
+          <div class="mb-3">
+            <label for="editWarehouseCategory" class="form-label"
+              >Category</label
+            >
+            <select class="form-control" id="editWarehouseCategory" required>
+              <option value="electronics">Electronics</option>
+              <option value="medical">Medical</option>
+              <option value="agricultural">Agricultural</option>
+              <option value="technology">Technology</option>
+            </select>
+          </div>
           <button type="submit" class="btn btn-primary w-100">
             Save Changes
           </button>
@@ -155,7 +177,6 @@
     </div>
   </div>
 </div>
-
 <script>
   document
     .getElementById("addWarehouseForm")

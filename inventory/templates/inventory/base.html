@@ -21,7 +21,7 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
-        overflow: hidden;
+        overflow-x: hidden; /* Prevents unwanted horizontal scroll */
         background-color: #f4f5f7;
       }
 
@@ -29,6 +29,7 @@
       .main-header {
         background: linear-gradient(to right, #6a11cb, #2575fc);
         color: white;
+        height: 90px;
         padding: 15px 20px;
         display: flex;
         justify-content: space-between;
@@ -101,7 +102,6 @@
         color: white;
       }
 
-      /* Sidebar */
       .sidebar {
         width: 260px;
         background: linear-gradient(to bottom, #1a1a2e, #16213e);
@@ -112,8 +112,8 @@
         top: 60px;
         left: 0;
         box-shadow: 4px 0px 8px rgba(0, 0, 0, 0.3);
+        overflow-y: auto; /* Allows scrolling inside sidebar */
       }
-
       .sidebar h5 {
         color: #ffb703;
         text-transform: uppercase;
@@ -163,11 +163,55 @@
       .dashboard-container {
         display: flex;
         margin-top: 60px;
+        min-height: calc(100vh - 60px);
       }
-
       .main-content {
         flex-grow: 1;
-        margin-left: 280px;
+        padding: 20px;
+        margin-left: 262px; /* Space for sidebar */
+        overflow-y: auto;
+        min-height: calc(100vh - 60px);
+        transition: margin-left 0.3s ease-in-out;
+      }
+
+      /* If sidebar is hidden, remove margin */
+      body:not(:has(.sidebar)) .main-content {
+        margin-left: 0px !important;
+      }
+      /* Clean & Modern Menu */
+      .nav-menu {
+        display: flex;
+        gap: 20px;
+      }
+
+      .nav-menu a {
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+        text-transform: uppercase;
+        color: white;
+        position: relative;
+        padding-bottom: 5px;
+        transition: color 0.3s ease-in-out;
+      }
+
+      .nav-menu a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        height: 2px;
+        background-color: #ffffffff;
+        transition: width 0.3s ease-in-out;
+      }
+
+      .nav-menu a:hover {
+        color: #fff70cff;
+      }
+
+      .nav-menu a:hover::after {
+        width: 100%;
       }
     </style>
   </head>
@@ -177,6 +221,7 @@
     <div class="main-header">
       <h3>📦 Inventory Management</h3>
 
+      {% if request.session.user_id %}
       <div class="user-menu">
         <img
           src="https://img.freepik.com/premium-vector/profile-picture-placeholder-avatar-silhouette-gray-tones-icon-colored-shapes-gradient_1076610-40164.jpg?w=826"
@@ -189,32 +234,64 @@
             type="button"
             data-bs-toggle="dropdown"
           >
-            {{ user.username }}
+            {{ request.session.user_name }}
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#">Profile</a></li>
-            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li>
+              <a class="dropdown-item" href="{% url 'inventory:profile' %}"
+                >Profile</a
+              >
+            </li>
+            <!-- <li>
+              <a class="dropdown-item" href="{% url 'inventory:settings' %}"
+                >Settings</a
+              >
+            </li> -->
             <li><hr class="dropdown-divider" /></li>
-            <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+            <li>
+              <a
+                class="dropdown-item text-danger"
+                href="{% url 'inventory:logout' %}"
+                >Logout</a
+              >
+            </li>
           </ul>
         </div>
       </div>
+      {% else %} {% comment %}
+      <a href="{% url 'inventory:login' %}" id="signIn" class="btn btn-primary"
+        >Sign In</a
+      >
+      {% endcomment %}
+      <div class="nav-menu">
+        <a href="#About" class="btn">About</a>
+        <a href="#Features" class="btn">Features</a>
+        <a href="#Contact" class="btn">Contact</a>
+      </div>
+
+      {% endif %}
     </div>
 
     <div class="dashboard-container">
       <!-- Sidebar (Dashboard Menu) - ONLY SHOW ON DASHBOARD PAGE -->
+      {% if request.session.user_id %}
+
       <div class="sidebar">
+        <br />
         <h5>📊 Dashboard Menu</h5>
         <a href="{% url 'inventory:dashboard' %}">🏠 Dashboard</a>
         <a href="{% url 'inventory:product_list' %}">📦 Products</a>
         <a href="{% url 'inventory:order_list' %}">🛒 Orders</a>
+        {% if request.session.user_role != 'Warehouse Staff' %}
         <a href="{% url 'inventory:warehouse_list' %}">🏭 Warehouses</a>
-        <a href="{% url 'inventory:user_list' %}">👤 Users</a>
+        <a href="{% url 'inventory:user_list' %}">👤 Warehouse Staff</a>
+        {% endif %}
       </div>
 
+      {% endif %}
       <!-- Main Content -->
       <div class="main-content">
-        {% block content %}{% if messages %}
+        {% block content %} {% if messages %}
         <div class="container mt-3">
           {% for message in messages %}
           <div
@@ -231,11 +308,27 @@
           </div>
           {% endfor %}
         </div>
-        {% endif %} {% endblock %}
+        {% endif %}{% endblock %}
       </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function adjustMainContent() {
+        const sidebar = document.getElementById("sidebar");
+        const mainContent = document.querySelector(".main-content");
+
+        if (sidebar && window.getComputedStyle(sidebar).display === "none") {
+          mainContent.style.marginLeft = "0"; // No sidebar, full width
+        } else {
+          mainContent.style.marginLeft = "260px"; // Sidebar is visible
+        }
+      }
+
+      // Run on page load and window resize
+      window.addEventListener("load", adjustMainContent);
+      window.addEventListener("resize", adjustMainContent);
+    </script>
   </body>
 </html>

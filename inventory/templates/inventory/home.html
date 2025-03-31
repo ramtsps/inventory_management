@@ -1,0 +1,319 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<!-- Hero Section with Gradient Background -->
+<!-- Hero Section with Gradient Background -->
+ <br>
+<div class="max-w-full overflow-hidden">
+    <div class="hero-section d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container text-center text-white py-5">
+            <h1 class="fw-bold display-3 mb-4 animate__animated animate__fadeInDown">Welcome to Inventory Pro</h1>
+            <p class="lead fs-3 mb-5 animate__animated animate__fadeIn animate__delay-1s">
+                The ultimate solution for modern inventory management
+            </p>
+            {% if not request.session.user_id %}
+            <div class="mt-4 animate__animated animate__fadeIn animate__delay-2s">
+                <button id="signInBtn" class="btn btn-light btn-lg px-5 py-3 fw-bold rounded-pill shadow">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+            </div>
+
+            {%else %}
+            <div class="mt-4 animate__animated animate__fadeIn animate__delay-2s">
+          
+                <a href="{% url 'inventory:logout' %}" class="btn btn-light btn-lg px-5 py-3 fw-bold rounded-pill shadow">  <i class="fas fa-sign-in-alt me-2"></i>Sign Out</a>
+             
+          </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+<!-- Sign In Form (Initially Hidden) -->
+<div class="container py-5 d-none" id="signInForm">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg p-4">
+                <h3 class="text-center mb-4">Sign In</h3>
+                <form method="POST" action="{% url 'inventory:login' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Warehouse Staff">Warehouse Staff</option>
+                            <option value="Customer">Customer</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <!-- About Section -->
+  <div class="container py-5" id="About">
+    <div class="row align-items-center">
+      <div class="col-md-6 mb-4 mb-md-0">
+        <div class="position-relative">
+          <img
+            src="https://img.freepik.com/free-vector/digital-packaging-concept-illustration_114360-7510.jpg?t=st=1743047479~exp=1743051079~hmac=66106cf421d3f7f64685250540fc5f78ec4b2aeecc0139d0ae030f6d3843fc84&w=826"
+            alt="About Inventory"
+            class="img-fluid rounded shadow-lg"
+          />
+          <div
+            class="position-absolute top-0 start-0 bg-warning p-2 rounded shadow"
+            style="transform: rotate(-10deg)"
+          >
+            <span class="fw-bold">New Feature!</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <span class="badge bg-info text-dark mb-3">About Us</span>
+        <h2 class="fw-bold display-5 mb-4">
+          Revolutionize Your Inventory Control
+        </h2>
+        <p class="fs-5 text-muted">
+          Our Inventory Management System helps businesses streamline their
+          stock tracking, automate order processing, and optimize inventory
+          control with ease. Designed for warehouses and retail businesses of
+          all sizes.
+        </p>
+        <div class="row mt-4">
+          <div class="col-6">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                <i class="fas fa-chart-line text-primary fs-4"></i>
+              </div>
+              <span>Real-time Analytics</span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                <i class="fas fa-qrcode text-success fs-4"></i>
+              </div>
+              <span>QR Code Scanning</span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
+                <i class="fas fa-bell text-danger fs-4"></i>
+              </div>
+              <span>Low Stock Alerts</span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-purple bg-opacity-10 p-2 rounded me-3">
+                <i class="fas fa-robot text-purple fs-4"></i>
+              </div>
+              <span>Automation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="container my-5" id="Features">
+    <!-- Title Section -->
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Inventory Management System Features</h2>
+      <p class="lead text-muted">Real-Time Tracking, Automation, Forecasting & Error Prevention</p>
+    </div>
+  
+    <!-- Features Grid -->
+    <div class="row g-4" >
+      <!-- Feature 1 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm p-4 feature-card" style="border-bottom: 4px solid #4e73df">
+          <div class="text-center mb-4">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block">
+              <i class="fas fa-barcode text-primary fs-2"></i>
+            </div>
+          </div>
+          <h4 class="text-center mb-3">Real-Time Stock Tracking</h4>
+          <p class="text-muted text-center">
+            Keep track of stock levels instantly with QR code scanning and automated updates.
+          </p>
+        </div>
+      </div>
+    
+      <!-- Feature 2 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm p-4 feature-card" style="border-bottom: 4px solid #1cc88a">
+          <div class="text-center mb-4">
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block">
+              <i class="fas fa-cogs text-success fs-2"></i>
+            </div>
+          </div>
+          <h4 class="text-center mb-3">Automated Order Fulfillment</h4>
+          <p class="text-muted text-center">
+            Reduce manual work by automating order processing and fulfillment, ensuring accuracy and efficiency.
+          </p>
+        </div>
+      </div>
+    
+      <!-- Feature 3 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm p-4 feature-card" style="border-bottom: 4px solid #f6c23e">
+          <div class="text-center mb-4">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block">
+              <i class="fas fa-chart-line text-warning fs-2"></i>
+            </div>
+          </div>
+          <h4 class="text-center mb-3">Demand Forecasting</h4>
+          <p class="text-muted text-center">
+            Predict future inventory needs using AI-driven demand analysis and minimize stock shortages.
+          </p>
+        </div>
+      </div>
+    
+      <!-- Feature 4 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm p-4 feature-card" style="border-bottom: 4px solid #e74a3b">
+          <div class="text-center mb-4">
+            <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-block">
+              <i class="fas fa-exclamation-triangle text-danger fs-2"></i>
+            </div>
+          </div>
+          <h4 class="text-center mb-3">Error Minimization</h4>
+          <p class="text-muted text-center">
+            Prevent inventory mismanagement with real-time error detection and correction alerts.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+<br><br>  
+
+  <!-- Call to Action -->
+  <div class="py-5" style="background: linear-gradient(135deg, #1d2671 0%, #c33764 100%);">
+    <div class="container text-center text-white py-4">
+      <h2 class="fw-bold display-5 mb-4">Why Choose Our Inventory Management System?</h2>
+      <p class="lead mb-5">
+        Discover the key advantages that set us apart from the rest.
+      </p>
+  
+      <div class="row g-4">
+        <!-- Benefit 1 -->
+        <div class="col-md-4">
+          <div class="p-4 border border-light rounded-3">
+            <i class="fas fa-bolt fs-2 text-warning"></i>
+            <h4 class="mt-3">Real-Time Stock Updates</h4>
+            <p class="text-light">
+              Stay ahead with automatic inventory updates and avoid stock shortages or overstocking.
+            </p>
+          </div>
+        </div>
+  
+        <!-- Benefit 2 -->
+        <div class="col-md-4">
+          <div class="p-4 border border-light rounded-3">
+            <i class="fas fa-clock fs-2 text-success"></i>
+            <h4 class="mt-3">Save Time & Effort</h4>
+            <p class="text-light">
+              Reduce manual work with automated order tracking and smart inventory adjustments.
+            </p>
+          </div>
+        </div>
+  
+        <!-- Benefit 3 -->
+        <div class="col-md-4">
+          <div class="p-4 border border-light rounded-3">
+            <i class="fas fa-chart-line fs-2 text-info"></i>
+            <h4 class="mt-3">Powerful Analytics</h4>
+            <p class="text-light">
+              Gain insights with detailed reports on stock movement, sales trends, and forecasts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <div class="container py-5" id="Contact">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="text-center fw-bold mb-4">Contact Us</h2>
+            <p class="text-center text-muted mb-5">Have questions? Feel free to reach out to us!</p>
+            <div class="card shadow-lg p-4">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Your Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div><script>
+    document.getElementById('signInBtn').addEventListener('click', function () {
+        document.getElementById('signInForm').classList.remove('d-none');
+    });
+
+</script>
+{% endblock %} {% block title %}Home - Inventory Management{% endblock %}
+
+<style>
+  .full {
+    width: 100%;!important;
+  }
+  .hero-img {
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+  }
+  .hero-img:hover {
+    transform: translateY(-5px);
+  }
+  .feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 10px;
+  }
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+  }
+  .bg-purple {
+    background-color: #6f42c1;
+  }
+  .text-purple {
+    color: #6f42c1;
+  }
+</style>

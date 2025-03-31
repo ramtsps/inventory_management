@@ -31,7 +31,7 @@
             >
             {% else %} {{ product.quantity_in_stock }} {% endif %}
           </td>
-          <td>${{ product.selling_price }}</td>
+          <td>₹{{ product.selling_price }}</td>
           <td>
             <a
               href="{% url 'inventory:product_detail' product.id %}"

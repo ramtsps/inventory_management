@@ -1,0 +1,234 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container mt-4">
+  <h2 class="fw-bold text-primary">Add Product to {{ warehouse.name }}</h2>
+
+  <div class="row">
+    <div class="col-md-6">
+      <!-- QR Code Scanner -->
+      <video id="preview" class="w-100 border"></video>
+      <button id="startScanner" class="btn btn-success mt-2">
+        📷 Start Scanner
+      </button>
+    </div>
+
+    <div class="col-md-6">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Product Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">SKU</label>
+          <input
+            type="text"
+            id="sku"
+            name="sku"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Category</label>
+          <input
+            type="text"
+            id="category"
+            name="category"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Supplier</label>
+          <input
+            type="text"
+            id="supplier"
+            name="supplier"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Quantity</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Price</label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Location</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            class="form-control"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            class="form-control"
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Capture Product Image</label>
+          <input
+            type="file"
+            id="productImage"
+            name="product_image"
+            accept="image/*"
+            capture="environment"
+            class="form-control"
+            required
+          />
+          <img
+            id="imagePreview"
+            class="mt-2"
+            width="150"
+            style="display: none"
+          />
+        </div>
+
+        <button type="button" id="generateQR" class="btn btn-dark">
+          📌 Generate QR Code
+        </button>
+        <img
+          id="qrCodePreview"
+          class="mt-2"
+          width="150"
+          style="display: none"
+        />
+        <button type="submit" class="btn btn-primary">➕ Add Product</button>
+        <a
+          href="{% url 'inventory:warehouse_products' warehouse.id %}"
+          class="btn btn-secondary"
+          >Cancel</a
+        >
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- QR Code Scanner Script -->
+<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+<script>
+  document
+    .getElementById("productImage")
+    .addEventListener("change", function (event) {
+      let file = event.target.files[0];
+      if (file) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById("imagePreview").src = e.target.result;
+          document.getElementById("imagePreview").style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+  document.getElementById("generateQR").addEventListener("click", function () {
+    let productName = document.getElementById("name").value;
+    let sku = document.getElementById("sku").value;
+    let category = document.getElementById("category").value;
+    let supplier = document.getElementById("supplier").value;
+    let quantity = document.getElementById("quantity").value;
+    let price = document.getElementById("price").value;
+    let location = document.getElementById("location").value;
+    let description = document.getElementById("description").value;
+
+    if (!productName || !sku) {
+      alert("Please fill in Product Name and SKU before generating QR Code.");
+      return;
+    }
+
+    // Create a JSON object with product details
+    let qrData = JSON.stringify({
+      name: productName,
+      sku: sku,
+      category: category,
+      supplier: supplier,
+      quantity: quantity,
+      price: price,
+      location: location,
+      description: description,
+    });
+
+    let qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+      qrData
+    )}`;
+
+    document.getElementById("qrCodePreview").src = qrCodeUrl;
+    document.getElementById("qrCodePreview").style.display = "block";
+  });
+</script>
+<script>
+  document
+    .getElementById("startScanner")
+    .addEventListener("click", function () {
+      let scanner = new Instascan.Scanner({
+        video: document.getElementById("preview"),
+      });
+
+      scanner.addListener("scan", function (content) {
+        try {
+          let data = JSON.parse(content); // Parse the QR code data
+
+          // Auto-fill form fields with scanned data
+          document.getElementById("name").value = data.name || "";
+          document.getElementById("sku").value = data.sku || "";
+          document.getElementById("category").value = data.category || "";
+          document.getElementById("supplier").value = data.supplier || "";
+          document.getElementById("quantity").value = data.quantity || "";
+          document.getElementById("price").value = data.price || "";
+          document.getElementById("location").value = data.location || "";
+          document.getElementById("description").value = data.description || "";
+
+          scanner.stop(); // Stop scanning after successful scan
+        } catch (error) {
+          alert("Invalid QR Code Data");
+        }
+      });
+
+      Instascan.Camera.getCameras()
+        .then(function (cameras) {
+          if (cameras.length > 0) {
+            scanner.start(cameras[0]); // Start with first available camera
+          } else {
+            alert("No cameras found.");
+          }
+        })
+        .catch(function (e) {
+          console.error(e);
+          alert("Camera access denied!");
+        });
+    });
+</script>
+{% endblock %}

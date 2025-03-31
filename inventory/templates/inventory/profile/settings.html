@@ -1,0 +1,116 @@
+{% extends "inventory/base.html" %} {% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4">Edit Settings</h2>
+  <!-- Centered form with padding and shadow for a card-like appearance -->
+  <div
+    class="card shadow-lg border-0 rounded-lg mx-auto"
+    style="max-width: 600px"
+  >
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="name" class="form-label">Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            name="name"
+            value="{{ user.name }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="mobile_number" class="form-label">Mobile Number</label>
+          <input
+            type="text"
+            class="form-control"
+            id="mobile_number"
+            name="mobile_number"
+            value="{{ user.mobile_number }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            value="{{ user.email }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">New Password</label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+          />
+          <small class="form-text text-muted">
+            Leave blank to keep the current password.
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 py-2">
+          Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block title %}Settings - Inventory Management{% endblock %}
+
+<style>
+  /* Add this to your base.css or relevant CSS file */
+  .card {
+    background-color: #ffffff; /* White background for the card */
+    border-radius: 15px; /* More rounded corners for a sleek look */
+  }
+
+  .card-body {
+    padding: 30px; /* More padding inside the card */
+  }
+
+  h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #6a11cb; /* Gradient color for the header */
+  }
+
+  .form-label {
+    font-weight: bold;
+  }
+
+  .form-control {
+    border-radius: 8px; /* Rounded corners for the input fields */
+    padding: 12px; /* Padding for better input feel */
+  }
+
+  .form-control:focus {
+    border-color: #6a11cb; /* Focus border color for input fields */
+    box-shadow: 0 0 5px rgba(106, 17, 203, 0.5); /* Focus glow effect */
+  }
+
+  .btn-success {
+    background-color: #6a11cb;
+    border: none;
+    transition: background-color 0.3s ease;
+    font-size: 1.1rem;
+  }
+
+  .btn-success:hover {
+    background-color: #2575fc; /* Hover effect with blue shade */
+  }
+
+  .card .form-text {
+    font-size: 0.875rem;
+  }
+</style>

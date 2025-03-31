@@ -1,33 +1,43 @@
-{% extends 'inventory/base.html' %} 
+{% extends 'inventory/base.html' %}
 
 {% block content %}
 <style>
   .unpaid-badge {
-    background-color: #dc3545; /* Bootstrap Danger Red */
-    color: white;
-  }
-  
-  .paid-badge {
-    background-color: #28a745; /* Bootstrap Success Green */
-    color: white;
-  }
-  
-  .refund-badge {
-    background-color: #ffc107; /* Bootstrap Warning Yellow */
-    color: black;
-  }
-  .table-responsive {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
-  .table thead {
-    position: sticky;
-    top: 0;
-    background: linear-gradient(135deg, #11998e, #38ef7d);
-    z-index: 10;
-  }
-  
+  background-color: #dc3545 !important; /* Bootstrap Danger Red */
+  color: white;
+}
+
+.paid-badge {
+  background-color: #28a745 !important; /* Bootstrap Success Green */
+  color: white;
+}
+
+.refund-badge {
+  background-color: #ffc107 !important; /* Bootstrap Warning Yellow */
+  color: black;
+}
+
+.pending {
+  background-color: #fff3cd !important; /* Light yellow for pending orders */
+}
+
+.shipped {
+  background-color: #d1ecf1 !important; /* Light blue for shipped orders */
+}
+
+.delivered {
+  background-color: #d4edda !important; /* Light green for delivered orders */
+}
+
+.canceled {
+  background-color: #f8d7da !important; /* Light red for canceled orders */
+}
+.pt{
+  padding: 15px;
+  text-transform: capitalize;
+  font-size: medium;
+}
+
 </style>
 
 <div class="container">
@@ -41,7 +51,15 @@
   <a href="{% url 'inventory:create_order' %}" class="btn btn-success mb-3">
     ➕ Create Order
   </a>
-
+  {% if messages %}
+  <div class="container mt-3">
+      {% for message in messages %}
+      <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+          {{ message }}
+      </div>
+      {% endfor %}
+  </div>
+  {% endif %}
   <!-- Order Summary Cards -->
   <div class="row mb-3">
     <div class="col-md-3">
@@ -79,97 +97,101 @@
   </div>
 
   <!-- Filters & Date Filters in Same Row -->
-<div class="row mb-3 align-items-end">
-  <div class="col-md-2">
-    <input type="text" id="searchFilter" class="form-control" placeholder="🔍 Search orders...">
+  <div class="row mb-3 align-items-end">
+    <div class="col-md-2">
+      <input type="text" id="searchFilter" class="form-control" placeholder="🔍 Search orders...">
+    </div>
+    <div class="col-md-2">
+      <select id="statusFilter" class="form-select">
+        <option value="">Filter by Status</option>
+        <option value="pending">Pending</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+        <option value="canceled">Canceled</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select id="paymentFilter" class="form-select">
+        <option value="">Filter by Payment</option>
+        <option value="unpaid">Unpaid</option>
+        <option value="paid">Paid</option>
+        <option value="refund">Refund</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input type="date" id="startDate" class="form-control">
+    </div>
+    <div class="col-md-2">
+      <input type="date" id="endDate" class="form-control">
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-primary w-50" onclick="filterOrders()">Apply</button>
+      <button class="btn btn-secondary w-50" onclick="clearFilters()">Clear</button>
+    </div>
   </div>
-  <div class="col-md-2">
-    <select id="statusFilter" class="form-select">
-      <option value="">Filter by Status</option>
-      <option value="pending">Pending</option>
-      <option value="shipped">Shipped</option>
-      <option value="delivered">Delivered</option>
-      <option value="canceled">Canceled</option>
-    </select>
-  </div>
-  <div class="col-md-2">
-    <select id="paymentFilter" class="form-select">
-      <option value="">Filter by Payment</option>
-      <option value="unpaid">Unpaid</option>
-      <option value="paid">Paid</option>
-      <option value="refund">Refund</option>
-    </select>
-  </div>
-  <div class="col-md-2">
-    <input type="date" id="startDate" class="form-control">
-  </div>
-  <div class="col-md-2">
-    <input type="date" id="endDate" class="form-control">
-  </div>
-  <div class="col-md-2 d-flex gap-2">
-    <button class="btn btn-primary w-50" onclick="filterOrders()">Apply</button>
-    <button class="btn btn-secondary w-50" onclick="clearFilters()">Clear</button>
-  </div>
-</div>
-  <!-- Orders Table -->
- <!-- Scrollable Orders Table -->
-<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-  <table class="table table-hover shadow-sm rounded-3">
-    <thead class="text-white sticky-top" style="background: linear-gradient(135deg, #11998e, #38ef7d); top: 0;">
-      <tr>
-        <th>Order ID</th>
-        <th>Customer</th>
-        <th>Product</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th>Payment Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="orderTableBody">
-      {% for order in orders %}
-      <tr data-status="{{ order.status|lower }}" 
-          data-payment="{{ order.payment_status|lower }}" 
-          data-customer="{{ order.customer|lower }}" 
-          data-product="{{ order.product|lower }}"
-          data-date="{{ order.order_date|date:'Y-m-d' }}">
-        <td>#{{ order.id }}</td>
-        <td>{{ order.customer }}</td>
-        <td>{{ order.product }}</td>
-        <td>{{ order.order_date|date:"Y-m-d" }}</td>
-        <td>
-          <span class="badge 
-          {% if order.status|lower == 'pending' %} bg-warning text-dark 
-          {% elif order.status|lower == 'shipped' %} bg-info 
-          {% elif order.status|lower == 'delivered' %} bg-success 
-          {% elif order.status|lower == 'canceled' %} bg-danger {% endif %}">
-          {{ order.status }}
-        </span>
-        </td>
-        <td>
-          <form class="payment-status-form" data-order-id="{{ order.id }}">
-            {% csrf_token %}
-            <select class="form-select payment-status-dropdown px-3 py-2 rounded-pill 
-              {% if order.payment_status == 'unpaid' %} unpaid-badge 
-              {% elif order.payment_status == 'paid' %} paid-badge 
-              {% elif order.payment_status == 'refund' %} refund-badge {% endif %}"
-              data-initial-value="{{ order.payment_status }}"
-              style="border: none; outline: none;">
-              <option value="unpaid" {% if order.payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
-              <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Paid</option>
-              <option value="refund" {% if order.payment_status == 'refund' %}selected{% endif %}>Refund</option>
-            </select>
-          </form>
-        </td>
-        <td>
-          <a href="{% url 'inventory:order_detail' order.id %}" class="btn btn-primary btn-sm">👁️ View</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
 
+  <!-- Orders Table -->
+  <!-- Scrollable Orders Table -->
+  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+    <table class="table table-hover shadow-sm rounded-3">
+      <thead class="text-white sticky-top" style="background: linear-gradient(135deg, #11998e, #38ef7d); top: 0;">
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Payment Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="orderTableBody">
+        {% for order in orders %}
+        <tr class=" 
+        {% if order.status|lower == 'pending' %}bg-warning text-dark{% endif %}
+        {% if order.status|lower == 'shipped' %}bg-info{% endif %}
+        {% if order.status|lower == 'delivered' %}bg-success{% endif %}
+        {% if order.status|lower == 'canceled' %}bg-danger{% endif %}
+    " data-status="{{ order.status|lower }}" 
+            data-payment="{{ order.payment_status|lower }}" 
+            data-customer="{{ order.customer|lower }}" 
+            data-product="{{ order.product|lower }}"
+            data-date="{{ order.order_date|date:'Y-m-d' }}">
+          <td>#{{ order.id }}</td>
+          <td>{{ order.customer }}</td>
+          <td>{{ order.product }}</td>
+          <td>{{ order.order_date|date:"Y-m-d" }}</td>
+          <td>
+            <span class="badge pt
+            {% if order.status|lower == 'pending' %} bg-warning text-dark 
+            {% elif order.status|lower == 'shipped' %} bg-info 
+            {% elif order.status|lower == 'delivered' %} bg-success 
+            {% elif order.status|lower == 'canceled' %} bg-danger {% endif %}">
+            {{  order.status  }}
+          </span>
+          </td>
+          <td>
+            <form class="payment-status-form" data-order-id="{{ order.id }}">
+              {% csrf_token %}
+              <select class="form-select payment-status-dropdown px-3 py-2 rounded-pill 
+                {% if order.payment_status == 'unpaid' %} unpaid-badge 
+                {% elif order.payment_status == 'paid' %} paid-badge 
+                {% elif order.payment_status == 'refund' %} refund-badge {% endif %}"
+                data-initial-value="{{ order.payment_status }}" style="border: none; outline: none;">
+                <option value="unpaid" {% if order.payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="refund" {% if order.payment_status == 'refund' %}selected{% endif %}>Refund</option>
+              </select>
+            </form>
+          </td>
+          <td>
+            <a href="{% url 'inventory:order_detail' order.id %}" class="btn btn-primary btn-sm">👁️ View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- JavaScript for Search, Date, and Filters -->
@@ -179,7 +201,7 @@
       let orderId = this.closest("form").getAttribute("data-order-id");
       let paymentStatus = this.value;
       let form = this.closest("form");
-  
+
       fetch("{% url 'inventory:update_payment_status' %}", {
         method: "POST",
         headers: {
@@ -198,7 +220,7 @@
         .catch((error) => console.error("Error updating payment status:", error));
     });
   });
-  
+
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("searchFilter").addEventListener("input", filterOrders);
     document.getElementById("statusFilter").addEventListener("change", filterOrders);
@@ -227,8 +249,8 @@
 
       row.style.display = searchMatch && statusMatch && paymentMatch && dateMatch ? "" : "none";
     });
-
   }
+
   function clearFilters() {
     document.getElementById("searchFilter").value = "";
     document.getElementById("statusFilter").value = "";

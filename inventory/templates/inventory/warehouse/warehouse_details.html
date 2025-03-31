@@ -1,0 +1,14 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container mt-4">
+  <h2 class="fw-bold text-primary">{{ warehouse.name }}</h2>
+  <p><strong>Location:</strong> {{ warehouse.location }}</p>
+  <p><strong>Category:</strong> {{ warehouse.category|capfirst }}</p>
+
+  <a
+    href="{% url 'inventory:warehouse_login' warehouse.id %}"
+    class="btn btn-success"
+  >
+    🔐 Login to Warehouse
+  </a>
+</div>
+{% endblock %}

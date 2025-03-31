@@ -1,0 +1,16 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container mt-4">
+  <h2 class="fw-bold text-danger">Delete Product</h2>
+  <p>Are you sure you want to delete <strong>{{ product.name }}</strong>?</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">🗑️ Confirm Delete</button>
+    <a
+      href="{% url 'inventory:warehouse_products' product.warehouse.id %}"
+      class="btn btn-secondary"
+      >↩️ Cancel</a
+    >
+  </form>
+</div>
+{% endblock %}

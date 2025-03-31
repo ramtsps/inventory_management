@@ -7,40 +7,140 @@ from django.contrib import messages
 from .forms import ProductForm,CategoryForm,SupplierForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
+from django.contrib.auth.hashers import check_password
+from .models import Users,WarehouseProduct
 
+def home(request):
+    return render(request, "inventory/home.html")
+def custom_login(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        role = request.POST.get("role")
+
+        try:
+            user = Users.objects.get(email=email)  # Get user by email first
+            if user.role != role:  # Check if role matches
+                messages.error(request, "Incorrect role selection.")
+                return redirect("inventory:home")
+
+            if password== user.password:  # Check hashed password
+                # Set session data
+                request.session["user_id"] = user.customer_id
+                request.session["user_name"] = user.name
+                request.session["user_email"] = user.email
+                request.session["user_role"] = user.role
+
+                messages.success(request, "Login successful!")
+                return redirect("inventory:dashboard")  # Redirect to dashboard
+            else:
+                messages.error(request, "Invalid password.")
+                return redirect("inventory:home")
+
+        except Users.DoesNotExist:
+            messages.error(request, "User does not exist.")
+            return redirect("inventory:home")
+
+    return render(request, "inventory/home.html")  # Render login page if not a POST request
+def profile(request):
+    # Assuming user is authenticated, get the logged-in user
+    user = Users.objects.get(customer_id=request.session['user_id'])
+    
+    return render(request, 'inventory/profile/profile.html', {'user': user})
+# Settings Page
+
+def profile_settings(request):
+    # Assuming user is authenticated, get the logged-in user
+    user = Users.objects.get(customer_id=request.session['user_id'])
+    
+    if request.method == 'POST':
+        # Get the updated data from the POST request
+        user.name = request.POST.get('name')
+        user.mobile_number = request.POST.get('mobile_number')
+        user.email = request.POST.get('email')
+      
+        
+        # Only hash the password if it has been changed
+        new_password = request.POST.get('password')
+        if new_password and new_password != user.password:
+            user.password = new_password  # You should hash the password here
+
+        user.save()
+        # Add a success message
+        messages.success(request, "Settings updated successfully!")
+        return redirect("inventory:profile")
+    return render(request, 'inventory/profile/settings.html', {'user': user})
+def logout_view(request):
+    request.session.flush()  # Clear session data
+    messages.success(request, "Logged out successfully!")
+    return redirect("inventory:home") 
 
 def dashboard(request):
-    # Example values for display
-    stock_count = 100  # Replace with actual database query
-    order_count = 250  # Replace with actual database query
-    low_stock_count = 10  # Replace with actual database query
-    user_count = 35  # Replace with actual database query
+    if "user_id" not in request.session:
+        return redirect("inventory:login")
 
-    # Stock levels data
-    stock_categories = ["Electronics", "Clothing", "Furniture"]
-    stock_counts = [50, 30, 20]  # Example data
+    stock_count = Product.objects.aggregate(Sum('quantity_in_stock'))['quantity_in_stock__sum'] or 0
+    order_count = Order.objects.count()
 
-    # Order trends data
-    order_dates = ["2024-03-01", "2024-03-02", "2024-03-03"]
-    order_counts = [5, 10, 7]  # Example order count per day
+    low_stock_count = Product.objects.filter(quantity_in_stock__lt=10).count()
+    user_count = Customer.objects.count()  # Change this to a dynamic user count if needed
 
-    # Order status data for Pie Chart
-    order_status_labels = ["Pending", "Shipped", "Delivered"]
-    order_status_counts = [10, 20, 30]  # Example data
+    # Stock levels for the Bar Chart
+ # Stock levels for the Bar Chart
+    stock_categories = Product.objects.values('category__name').annotate(stock=Sum('quantity_in_stock'))
+    stock_labels = [category['category__name'] for category in stock_categories]  # Category names
+    stock_counts = [category['stock'] for category in stock_categories]  # Stock count
 
+    # Order trends for the Line Chart
+    order_dates = Order.objects.values('order_date').annotate(order_count=Sum('quantity')).order_by('order_date')
+    order_dates_formatted = [date['order_date'].strftime('%Y-%m-%d') for date in order_dates]
+    order_counts = [date['order_count'] for date in order_dates]
+
+
+    # Order status for the Pie Chart
+    order_status_labels = ["Pending", "Shipped", "Delivered","Canceled"]
+    order_status_counts = [
+        Order.objects.filter(status='pending').count(),
+        Order.objects.filter(status='shipped').count(),
+        Order.objects.filter(status='delivered').count(),
+        Order.objects.filter(status='canceled').count(),
+    ]
+
+
+    # Order trends based on product name
+    product_orders = Order.objects.values('product__name').annotate(order_count=Sum('quantity')).order_by('product__name')
+    product_names = [product['product__name'] for product in product_orders]
+    product_order_counts = [product['order_count'] for product in product_orders]
+    product_orders = (
+    Order.objects.select_related('product')
+    .values('product__name')
+    .annotate(order_count=Sum('quantity'))
+    .order_by('product__name')
+)
+
+
+
+    # Convert to JSON for safe template rendering
     context = {
         "stock_count": stock_count,
         "order_count": order_count,
         "low_stock_count": low_stock_count,
         "user_count": user_count,
-        "stock_labels": stock_categories,
-        "stock_data": stock_counts,
-        "order_dates": order_dates,
-        "order_counts": order_counts,
-        "order_status_labels": order_status_labels,
-        "order_status_data": order_status_counts,
+        "stock_labels": json.dumps(stock_labels),
+        "stock_data": json.dumps(stock_counts),
+        "order_dates": json.dumps(order_dates_formatted),
+        "order_counts": json.dumps(order_counts),
+        "order_status_labels": json.dumps(order_status_labels),
+        "order_status_data": json.dumps(order_status_counts),
+        "user_name": request.session.get("user_name"),
+        "user_email": request.session.get("user_email"),
+        "user_role": request.session.get("user_role"),
+          "product_names": json.dumps(product_names),
+        "product_order_counts": json.dumps(product_order_counts),
     }
+
     return render(request, "inventory/sideBar/dashboard.html", context)
+
 
 import qrcode
 import json
@@ -509,12 +609,144 @@ def warehouse_stock(request, warehouse_id):
         return JsonResponse({"error": "Warehouse not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+def warehouse_details(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+    return render(request, 'inventory/warehouse/warehouse_details.html', {'warehouse': warehouse})
+def warehouse_products(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+    products = WarehouseProduct.objects.filter(warehouse=warehouse)
 
+    return render(request, "inventory/warehouse/warehouse_products.html", {"warehouse": warehouse, "products": products})
+def warehouse_add_product(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        sku = request.POST.get("sku")
+        category_id = request.POST.get("category")
+        supplier = request.POST.get("supplier")
+        stock = request.POST.get("quantity")
+        price = request.POST.get("price")
+        location = request.POST.get("location", "")
+        description = request.POST.get("description", "")
+
+        try:
+            stock = int(stock)
+            price = float(price)
+        except ValueError:
+            stock = 0
+            price = 0.00
+
+        category = get_object_or_404(Category, id=category_id)
+        product = WarehouseProduct(
+            name=name, sku=sku, category=category, supplier=supplier,
+            stock=stock, price=price, location=location, description=description,
+            warehouse=warehouse
+        )
+
+        if "product_image" in request.FILES:
+            product.image = request.FILES["product_image"]  # Save captured image
+
+        product.save()
+        product.generate_qr_code()
+        product.save()
+
+        return redirect("inventory:warehouse_products", warehouse_id=warehouse.id)
+
+    categories = Category.objects.all()
+    return render(
+        request,
+        "inventory/warehouse/warehouse_add_product.html",
+        {"warehouse": warehouse, "categories": categories}
+    )
+from .forms import WarehouseProductForm
+def warehouse_edit_product(request, product_id):
+    product = get_object_or_404(WarehouseProduct, id=product_id)
+
+    if request.method == "POST":
+        form = WarehouseProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.generate_qr_code()  # Ensure QR code is generated
+            product.save()
+            return redirect("inventory:warehouse_products", product.warehouse.id)
+    else:
+        form = WarehouseProductForm(instance=product)
+
+    return render(request, "inventory/warehouse/edit_product.html", {"form": form, "product": product})
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.http import JsonResponse
+from .models import WarehouseProduct
+
+def warehouse_generate_qr_code(request, product_id):
+    product = WarehouseProduct.objects.get(id=product_id)
+
+    qr_data = f"Product: {product.name}\nSKU: {product.sku}\nWarehouse: {product.warehouse.name}"
+    qr = qrcode.make(qr_data)
+
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+
+    product.qr_code.save(f"qr_{product.sku}.png", ContentFile(buffer.getvalue()), save=True)
+
+    return JsonResponse({"qr_code_url": product.qr_code.url})
+
+# Delete Product View
+def warehouse_delete_product(request, product_id):
+    product = get_object_or_404(WarehouseProduct, id=product_id)  # Ensure correct model
+    warehouse_id = product.warehouse.id
+    if request.method == "POST":
+        product.delete()
+        return redirect("inventory:warehouse_products", warehouse_id)
+    return render(request, "inventory/warehouse/delete_product.html", {"product": product})
+
+def warehouse_product_detail(request, product_id):
+    product = get_object_or_404(WarehouseProduct, id=product_id)
+    return render(request, "inventory/warehouse/product_detail.html", {"product": product})
+def warehouse_login(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+
+    if request.method == "POST":
+        email = request.POST["email"]
+        password = request.POST["password"]
+
+        try:
+            user = Users.objects.get(email=email)
+            
+            if password==user.password :
+                request.session["warehouse_id"] = warehouse.id  # Store warehouse session
+                request.session["user_id"] = user.customer_id  # Store user session
+                request.session["user_role"] = user.role
+                return redirect("inventory:warehouse_products", warehouse_id=warehouse.id)  # Redirect to product page
+            
+            else:
+                error_message = "Invalid email, password, or access to this warehouse."
+
+        except Users.DoesNotExist:
+            error_message = "User not found. Please check your credentials."
+
+    else:
+        error_message = None
+
+    return render(request, "inventory/warehouse/warehouse_login.html", {"warehouse": warehouse, "error_message": error_message})
+
+from django.contrib.auth import logout
+
+def warehouse_logout(request):
+    # logout(request)  # Logs out user
+    # request.session.pop("warehouse_id", None)  # Remove warehouse_id from session
+    return redirect("inventory:warehouse_list") # Redirect to warehouse selection
+def clear_warehouse_session(request):
+    # request.session.pop('warehouse_id', None)
+    return JsonResponse({"message": "Warehouse session cleared"})
 @csrf_exempt
 def add_warehouse(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        Warehouse.objects.create(name=data["name"], location=data["location"])
+        Warehouse.objects.create(name=data["name"], location=data["location"],category=data["category"])
         return JsonResponse({"success": True})
 @csrf_exempt
 def edit_warehouse(request, warehouse_id):
@@ -524,6 +756,7 @@ def edit_warehouse(request, warehouse_id):
             warehouse = Warehouse.objects.get(id=warehouse_id)
             warehouse.name = data['name']
             warehouse.location = data['location']
+            warehouse.category=data['category']
             warehouse.save()
             return JsonResponse({"success": True})
         except Warehouse.DoesNotExist:
@@ -558,7 +791,7 @@ def user_list(request):
             name=name,
             email=email,
             mobile_number=mobile_number,
-            password=make_password(password),
+            password=password,
             role=role
         )
         user.save()  # Ensure the user is saved properly
@@ -566,29 +799,34 @@ def user_list(request):
         return redirect("inventory:user_list") 
     return render(request, "inventory/sideBar/user_list.html", {"users": users})
 
-def edit_user(request, user_id):
-    user = get_object_or_404(Users, id=user_id)
+from django.db import IntegrityError
+def edit_user(request, customer_id):
+    user = get_object_or_404(Users, customer_id=customer_id)
 
     if request.method == "POST":
-        user.name = request.POST.get("name")
-        user.email = request.POST.get("email")
-        user.mobile_number = request.POST.get("mobile_number")
-        user.role = request.POST.get("role")
+        try:
+            user.name = request.POST.get("name")
+            user.email = request.POST.get("email")
+            user.mobile_number = request.POST.get("mobile_number")
+            user.role = request.POST.get("role")
 
-        new_password = request.POST.get("password")
-        if new_password:
-            user.password = make_password(new_password)  # Update password if provided
+            new_password = request.POST.get("password")
+            if new_password:
+                user.password = new_password  # Update password if provided
 
-        user.save()
-        return redirect("user_list")
+            user.save()
+            messages.success(request, "User updated successfully!")
+        except IntegrityError:
+            messages.error(request, "Email already exists! Please use a different email.")
+
+        return redirect("inventory:user_list")  # Redirect to user list after updating
 
     return render(request, "inventory/sideBar/user_list.html", {"users": Users.objects.all()})
-
-def delete_user(request, user_id):
-    user = get_object_or_404(Users, id=user_id)
+def delete_user(request, customer_id):
+    user = get_object_or_404(Users, customer_id=customer_id)  # Get user by customer_id
     user.delete()
-    return redirect("user_list")
-
+    messages.success(request, "User deleted successfully!")  # Show success message
+    return redirect("inventory:user_list") 
 
 
 from django.http import HttpResponse
@@ -654,3 +892,14 @@ def generate_invoice(request, order_id):
     
     return redirect(reverse("inventory:order_success") + f"?invoice_url={invoice_url}")
 
+
+
+
+def stock_levels(request):
+    products = Product.objects.all()
+    return render(request, "inventory/stock_levels.html", {"products": products})
+
+
+def customer(request):
+    users = Customer.objects.all()
+    return render(request, "inventory/users.html", {"users": users})

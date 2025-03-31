@@ -6,7 +6,14 @@ from django.conf.urls.static import static
 
 app_name = 'inventory'
 urlpatterns = [
-    path('', views.dashboard, name='dashboard'),
+    path("", views.home, name="home"),  # Home Page
+     path('login/', views.custom_login, name='login'), 
+     path("logout/", views.logout_view, name="logout"),
+    path('profile/', views.profile, name='profile'),
+    path('settings/',  profile_settings, name='settings'),
+
+
+    path("dashboard/", views.dashboard, name="dashboard"),
     path('products/', views.product_list, name='product_list'),
     path('orders/', views.order_list, name='order_list'),
     path('warehouses/', views.warehouse_list, name='warehouse_list'),
@@ -45,11 +52,32 @@ path('warehouses/', warehouse_list, name='warehouse_list'),
 path('warehouses/<int:warehouse_id>/stock/', views.warehouse_stock, name='warehouse_stock'),
   path('warehouses/delete/<int:warehouse_id>/', delete_warehouse, name='delete_warehouse'),
 
-    path("users/edit/<int:user_id>/", edit_user, name="edit_user"),
-    path("users/delete/<int:user_id>/", delete_user, name="delete_user"),
+   
+    path("users/edit/<int:customer_id>/", views.edit_user, name="edit_user"),
+  path("users/delete/<int:customer_id>/", views.delete_user, name="delete_user"),
+
 path("create_order/", create_order, name="create_order"),
     path("generate_invoice/<int:order_id>/", generate_invoice, name="generate_invoice"),
     path("order_success/", order_success, name="order_success"),
+
+
+      path('warehouse/<int:warehouse_id>/', warehouse_details, name='warehouse_details'),
+       path('warehouse/<int:warehouse_id>/login/', warehouse_login, name='warehouse_login'),
+       path('warehouse/<int:warehouse_id>/products/', warehouse_products, name='warehouse_products'),
+  path('warehouse/<int:warehouse_id>/products/add/', warehouse_add_product, name='add_product'),
+
+ path("warehouse/product/<int:product_id>/", warehouse_product_detail, name="warehouse_product_detail"), 
+path("warehouse/product/<int:product_id>/edit/", views.warehouse_edit_product, name="warehouse_edit_product"),
+path("warehouse/product/<int:product_id>/generate_qr/",warehouse_generate_qr_code, name="warehouse_generate_qr_code"),
+   path("warehouse_logout/", warehouse_logout, name="warehouse_logout"),
+
+path('clear-warehouse-session/', clear_warehouse_session, name='clear_warehouse_session'),
+    path("warehouse/product/<int:product_id>/delete/", warehouse_delete_product, name="warehouse_delete_product"),
+
+    path("stock-levels/", stock_levels, name="stock_levels"),
+ 
+    path("customer/", customer, name="customer"),
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

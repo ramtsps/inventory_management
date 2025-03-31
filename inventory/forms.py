@@ -82,3 +82,10 @@ class CustomerForm(forms.ModelForm):
         }
 
 
+from django import forms
+from .models import WarehouseProduct
+
+class WarehouseProductForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseProduct  # Use WarehouseProduct instead of Product
+        fields = ["name", "sku", "category", "supplier", "stock", "price", "location", "description", "image"]

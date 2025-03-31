@@ -1,0 +1,36 @@
+{% extends 'inventory/base.html' %} {% block content %}
+<div class="container mt-5">
+  <h2 class="text-center text-primary">Login to {{ warehouse.name }}</h2>
+
+  {% if error_message %}
+  <div class="alert alert-danger">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="POST" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        name="email"
+        id="email"
+        class="form-control"
+        required
+      />
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input
+        type="password"
+        name="password"
+        id="password"
+        class="form-control"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">🔐 Login</button>
+  </form>
+</div>
+{% endblock %}

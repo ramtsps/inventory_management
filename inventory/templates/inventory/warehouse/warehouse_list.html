@@ -1,11 +1,107 @@
-{% extends 'inventory/base.html' %} {% block content %}
 <style>
   .modal-scrollable {
     max-height: 70vh; /* Adjust height as needed */
     overflow-y: auto;
   }
+  .warehouse-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 15px;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .table-header {
+    background: linear-gradient(135deg, #ffb703, #ff8800);
+  }
+
+  .warehouse-row {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .warehouse-row:hover {
+    background: rgba(255, 183, 3, 0.2);
+    transform: scale(1.02);
+  }
+
+  .warehouse-name {
+    font-size: 32px;
+    font-weight: bold;
+  }
+
+  .location-cell {
+    font-weight: 500;
+    color: #495057;
+  }
+
+  .category-cell {
+    font-weight: bold;
+    color: #28a745;
+  }
+
+  .btn-warning,
+  .btn-danger {
+    transition: 0.3s;
+  }
+
+  .btn-warning:hover,
+  .btn-danger:hover {
+    transform: scale(1.1);
+  }
+  .warehouse-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .warehouse-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease-in-out;
+    border-left: 5px solid #ff8800;
+  }
+
+  .warehouse-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #ffb703, #ff8800);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+  }
+
+  .card-body p {
+    margin: 5px 0;
+    color: #495057;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+  }
+
+  .btn-warning,
+  .btn-danger {
+    transition: 0.3s;
+  }
+
+  .btn-warning:hover,
+  .btn-danger:hover {
+    transform: scale(1.1);
+  }
 </style>
 
+{% extends 'inventory/base.html' %} {% block content %}
 <div class="container">
   <h2 class="mt-3 fw-bold text-primary">🏭 Warehouses</h2>
   <button
@@ -15,34 +111,40 @@
   >
     ➕ Add Warehouse
   </button>
-
-  <!-- Warehouse Cards Layout -->
-  <div class="row row-cols-1 row-cols-md-4 g-4">
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div
+      class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}"
+    >
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="row warehouse-container">
     {% for warehouse in warehouses %}
-    <div class="col">
-      <div
-        class="card h-100 shadow-sm border-0 warehouse-card"
-        data-id="{{ warehouse.id }}"
-        data-name="{{ warehouse.name }}"
-        data-location="{{ warehouse.location }}"
-        data-bs-toggle="modal"
-        data-bs-target="#warehouseDetailModal"
-      >
-        <div class="card-body">
-          <h5 class="card-title text-primary fw-bold">
-            🏢 {{ warehouse.name }}
-          </h5>
-          <p class="card-text">
-            <strong>📍 Location:</strong> {{ warehouse.location }}
-          </p>
+    <div class="col-md-4">
+      <div class="warehouse-card shadow-sm">
+        <div class="card-header">
+          <a
+            href="{% url 'inventory:warehouse_details' warehouse.id %}"
+            class="text-primary fw-bold text-decoration-none"
+          >
+            <h5 class="warehouse-name">{{ warehouse.name }}</h5>
+          </a>
         </div>
-
-        <div class="card-footer d-flex justify-content-between">
+        <div class="card-body">
+          <p><strong>📍 Location:</strong> {{ warehouse.location }}</p>
+          <p><strong>🏷️ Category:</strong> {{ warehouse.category|capfirst }}</p>
+        </div>
+        <div class="card-footer">
           <button
             class="btn btn-warning btn-sm edit-warehouse"
             data-id="{{ warehouse.id }}"
             data-name="{{ warehouse.name }}"
             data-location="{{ warehouse.location }}"
+            data-category="{{ warehouse.category }}"
             data-bs-toggle="modal"
             data-bs-target="#editWarehouseModal"
           >
@@ -57,51 +159,13 @@
         </div>
       </div>
     </div>
-
+    {% empty %}
+    <div class="col-12 text-center text-danger fw-bold">
+      No warehouses available.
+    </div>
     {% endfor %}
   </div>
 </div>
-<!-- Warehouse Detail Modal -->
-<div
-  class="modal fade"
-  id="warehouseDetailModal"
-  tabindex="-1"
-  aria-labelledby="warehouseDetailModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="warehouseDetailModalLabel">
-          Warehouse Details
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body modal-scrollable">
-        <h5 class="fw-bold text-primary" id="modalWarehouseName"></h5>
-        <p>
-          <strong>📂 Categories:</strong>
-          <span id="modalTotalCategories">0</span>
-        </p>
-        <p>
-          <strong>📍 Location:</strong>
-          <span id="modalWarehouseLocation"></span>
-        </p>
-
-        <h6 class="mt-4 fw-bold text-secondary">📦 Product Stock</h6>
-        <div id="warehouseProducts">
-          <p>Loading products...</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Add Warehouse Modal -->
 <div
   class="modal fade"
@@ -141,6 +205,15 @@
               id="warehouseLocation"
               required
             />
+          </div>
+          <div class="mb-3">
+            <label for="warehouseCategory" class="form-label">Category</label>
+            <select class="form-control" id="warehouseCategory" required>
+              <option value="electronics">Electronics</option>
+              <option value="medical">Medical</option>
+              <option value="agricultural">Agricultural</option>
+              <option value="technology">Technology</option>
+            </select>
           </div>
           <button type="submit" class="btn btn-primary w-100">
             Add Warehouse
@@ -196,6 +269,18 @@
               required
             />
           </div>
+          <div class="mb-3">
+            <label for="editWarehouseCategory" class="form-label"
+              >Category</label
+            >
+            <select class="form-control" id="editWarehouseCategory" required>
+              <option value="general">General</option>
+              <option value="electronics">Electronics</option>
+              <option value="medical">Medical</option>
+              <option value="agricultural">Agricultural</option>
+              <option value="technology">Technology</option>
+            </select>
+          </div>
           <button type="submit" class="btn btn-primary w-100">
             Save Changes
           </button>
@@ -217,6 +302,7 @@
       e.preventDefault();
       const name = document.getElementById("warehouseName").value;
       const location = document.getElementById("warehouseLocation").value;
+      const categories = document.getElementById("warehouseCategory").value;
 
       fetch("{% url 'inventory:add_warehouse' %}", {
         method: "POST",
@@ -224,7 +310,11 @@
           "X-CSRFToken": csrftoken,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: name, location: location }),
+        body: JSON.stringify({
+          name: name,
+          location: location,
+          category: categories,
+        }),
       })
         .then((response) => response.json())
         .then((data) => {
@@ -254,7 +344,7 @@
       const id = document.getElementById("editWarehouseId").value;
       const name = document.getElementById("editWarehouseName").value;
       const location = document.getElementById("editWarehouseLocation").value;
-
+      const categories = document.getElementById("editWarehouseCategory").value;
       fetch(`/warehouses/edit/${id}/`, {
         // ✅ FIXED
         method: "POST",
@@ -262,7 +352,11 @@
           "X-CSRFToken": csrftoken,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: name, location: location }),
+        body: JSON.stringify({
+          name: name,
+          location: location,
+          category: categories,
+        }),
       })
         .then((response) => {
           if (!response.ok) {
