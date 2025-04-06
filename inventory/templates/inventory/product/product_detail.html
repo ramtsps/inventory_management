@@ -78,7 +78,10 @@
         <div class="col-md-6">
           <p class="fs-5">
             <strong>📝 Description:</strong>
-            <span class="text-muted">{{ product.description}}</span>
+            <span class="text-muted">
+              {% if product.description %} {{ product.description }} {% else %}
+              No Description {% endif %}
+            </span>
           </p>
         </div>
       </div>
