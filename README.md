@@ -1,6 +1,6 @@
 # Inventory Management System
 
-This is a web-based inventory management system developed using [mention your stack here, like Django/Node.js/etc].
+This is a web-based inventory management system developed using Django.
 
 ## Features
 
@@ -9,6 +9,14 @@ This is a web-based inventory management system developed using [mention your st
 - Generate reports
 - User authentication
 
-## Setup Instructions
+## Project Flow
 
-1. Clone the repository:
+```mermaid
+flowchart TD
+    A[Login] --> B[Dashboard]
+    B --> C[Add Product]
+    B --> D[View Inventory]
+    D --> E{Stock Available?}
+    E -->|Yes| F[Order Processed]
+    E -->|No| G[Notify Admin]
+```
