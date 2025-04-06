@@ -49,55 +49,50 @@
   .btn-danger:hover {
     transform: scale(1.1);
   }
+
   .warehouse-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
     padding: 20px;
   }
 
   .warehouse-card {
     background: #fff;
     border-radius: 12px;
-    padding: 15px;
+    padding: 20px;
+    border-left: 6px solid #ff8800;
     transition: all 0.3s ease-in-out;
-    border-left: 5px solid #ff8800;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    height: 100%;
   }
 
   .warehouse-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
 
   .card-header {
-    background: linear-gradient(135deg, #ffb703, #ff8800);
-    color: white;
-    padding: 10px;
-    text-align: center;
-    border-radius: 10px 10px 0 0;
-    font-weight: bold;
+    background: #f8f9fa; /* soft light gray */
+    color: #212529;
+    padding: 15px 20px;
+    border-bottom: 2px solid #ff8800;
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .card-body p {
-    margin: 5px 0;
+    margin: 8px 0;
     color: #495057;
+    font-size: 16px;
   }
 
   .card-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 10px;
     padding-top: 10px;
-  }
-
-  .btn-warning,
-  .btn-danger {
-    transition: 0.3s;
-  }
-
-  .btn-warning:hover,
-  .btn-danger:hover {
-    transform: scale(1.1);
   }
 </style>
 
@@ -124,9 +119,10 @@
   {% endif %}
   <div class="row warehouse-container">
     {% for warehouse in warehouses %}
-    <div class="col-md-4">
+    <div class="col-md-6 mb-4">
       <div class="warehouse-card shadow-sm">
         <div class="card-header">
+          <i class="bi bi-box-seam"></i>
           <a
             href="{% url 'inventory:warehouse_details' warehouse.id %}"
             class="text-primary fw-bold text-decoration-none"
@@ -137,6 +133,7 @@
         <div class="card-body">
           <p><strong>📍 Location:</strong> {{ warehouse.location }}</p>
           <p><strong>🏷️ Category:</strong> {{ warehouse.category|capfirst }}</p>
+          <p><strong>📝 Description:</strong> {{ warehouse.description }}</p>
         </div>
         <div class="card-footer">
           <button
@@ -145,6 +142,7 @@
             data-name="{{ warehouse.name }}"
             data-location="{{ warehouse.location }}"
             data-category="{{ warehouse.category }}"
+            data-description="{{ warehouse.description }}"
             data-bs-toggle="modal"
             data-bs-target="#editWarehouseModal"
           >
@@ -165,300 +163,350 @@
     </div>
     {% endfor %}
   </div>
-</div>
-<!-- Add Warehouse Modal -->
-<div
-  class="modal fade"
-  id="addWarehouseModal"
-  tabindex="-1"
-  aria-labelledby="addWarehouseModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addWarehouseModalLabel">Add Warehouse</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <form id="addWarehouseForm">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="warehouseName" class="form-label">Warehouse Name</label>
-            <input
-              type="text"
-              class="form-control"
-              id="warehouseName"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="warehouseLocation" class="form-label">Location</label>
-            <input
-              type="text"
-              class="form-control"
-              id="warehouseLocation"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="warehouseCategory" class="form-label">Category</label>
-            <select class="form-control" id="warehouseCategory" required>
-              <option value="electronics">Electronics</option>
-              <option value="medical">Medical</option>
-              <option value="agricultural">Agricultural</option>
-              <option value="technology">Technology</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            Add Warehouse
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- Edit Warehouse Modal -->
-<div
-  class="modal fade"
-  id="editWarehouseModal"
-  tabindex="-1"
-  aria-labelledby="editWarehouseModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editWarehouseModalLabel">Edit Warehouse</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <form id="editWarehouseForm">
-          {% csrf_token %}
-          <input type="hidden" id="editWarehouseId" />
-          <div class="mb-3">
-            <label for="editWarehouseName" class="form-label"
-              >Warehouse Name</label
-            >
-            <input
-              type="text"
-              class="form-control"
-              id="editWarehouseName"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="editWarehouseLocation" class="form-label"
-              >Location</label
-            >
-            <input
-              type="text"
-              class="form-control"
-              id="editWarehouseLocation"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="editWarehouseCategory" class="form-label"
-              >Category</label
-            >
-            <select class="form-control" id="editWarehouseCategory" required>
-              <option value="general">General</option>
-              <option value="electronics">Electronics</option>
-              <option value="medical">Medical</option>
-              <option value="agricultural">Agricultural</option>
-              <option value="technology">Technology</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            Save Changes
-          </button>
-        </form>
+  <!-- Add Warehouse Modal -->
+  <div
+    class="modal fade"
+    id="addWarehouseModal"
+    tabindex="-1"
+    aria-labelledby="addWarehouseModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addWarehouseModalLabel">Add Warehouse</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form id="addWarehouseForm">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="warehouseName" class="form-label"
+                >Warehouse Name</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="warehouseName"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="warehouseLocation" class="form-label">Location</label>
+              <input
+                type="text"
+                class="form-control"
+                id="warehouseLocation"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="warehouseCategory" class="form-label">Category</label>
+              <select class="form-control" id="warehouseCategory" required>
+                <option value="all">All</option>
+                <option value="electronics">Electronics</option>
+                <option value="furniture">Furniture</option>
+                <option value="groceries">Groceries</option>
+                <option value="clothing">Clothing</option>
+                <option value="medical">Medical</option>
+                <option value="automotive">Automotive</option>
+                <option value="agricultural">Agricultural</option>
+                <option value="stationery">Stationery</option>
+                <option value="technology">Technology</option>
+                <option value="sports_equipment">Sports Equipment</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="warehouseDescription" class="form-label"
+                >Description</label
+              >
+              <textarea
+                class="form-control"
+                id="warehouseDescription"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              Add Warehouse
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- JavaScript -->
-<script>
-  // Get CSRF Token from Django
-  const csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+  <!-- Edit Warehouse Modal -->
+  <div
+    class="modal fade"
+    id="editWarehouseModal"
+    tabindex="-1"
+    aria-labelledby="editWarehouseModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editWarehouseModalLabel">
+            Edit Warehouse
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form id="editWarehouseForm">
+            {% csrf_token %}
+            <input type="hidden" id="editWarehouseId" />
+            <div class="mb-3">
+              <label for="editWarehouseName" class="form-label"
+                >Warehouse Name</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editWarehouseName"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="editWarehouseLocation" class="form-label"
+                >Location</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editWarehouseLocation"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="editWarehouseCategory" class="form-label"
+                >Category</label
+              >
+              <select class="form-control" id="editWarehouseCategory" required>
+                <option value="general">General</option>
+                <option value="electronics">Electronics</option>
+                <option value="medical">Medical</option>
+                <option value="agricultural">Agricultural</option>
+                <option value="technology">Technology</option>
+              </select>
+            </div>
 
-  // Add Warehouse
-  document
-    .getElementById("addWarehouseForm")
-    .addEventListener("submit", function (e) {
-      e.preventDefault();
-      const name = document.getElementById("warehouseName").value;
-      const location = document.getElementById("warehouseLocation").value;
-      const categories = document.getElementById("warehouseCategory").value;
+            <div class="mb-3">
+              <label for="editWarehouseDescription" class="form-label"
+                >Description</label
+              >
+              <textarea
+                class="form-control"
+                id="editWarehouseDescription"
+                rows="3"
+                required
+              ></textarea>
+            </div>
 
-      fetch("{% url 'inventory:add_warehouse' %}", {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name,
-          location: location,
-          category: categories,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            window.location.reload();
-          } else {
-            alert("Failed to add warehouse: " + data.error);
-          }
-        });
-    });
+            <button type="submit" class="btn btn-primary w-100">
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  // Edit Warehouse - Prefill Modal
-  document.querySelectorAll(".edit-warehouse").forEach((button) => {
-    button.addEventListener("click", function () {
-      document.getElementById("editWarehouseId").value = this.dataset.id;
-      document.getElementById("editWarehouseName").value = this.dataset.name;
-      document.getElementById("editWarehouseLocation").value =
-        this.dataset.location;
-    });
-  });
+  <!-- JavaScript -->
+  <script>
+    // Get CSRF Token from Django
+    const csrftoken = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    ).value;
 
-  // Submit Edited Warehouse Data
-  document
-    .getElementById("editWarehouseForm")
-    .addEventListener("submit", function (e) {
-      e.preventDefault();
-      const id = document.getElementById("editWarehouseId").value;
-      const name = document.getElementById("editWarehouseName").value;
-      const location = document.getElementById("editWarehouseLocation").value;
-      const categories = document.getElementById("editWarehouseCategory").value;
-      fetch(`/warehouses/edit/${id}/`, {
-        // ✅ FIXED
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name,
-          location: location,
-          category: categories,
-        }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
+    // Add Warehouse
+    document
+      .getElementById("addWarehouseForm")
+      .addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("warehouseName").value;
+        const location = document.getElementById("warehouseLocation").value;
+        const category = document.getElementById("warehouseCategory").value;
+        const description = document.getElementById(
+          "warehouseDescription"
+        ).value;
+
+        fetch("{% url 'inventory:add_warehouse' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name,
+            location: location,
+            category: category,
+            description: description,
+          }),
         })
-        .then((data) => {
-          if (data.success) {
-            alert("Warehouse updated successfully! ✅");
-            window.location.reload();
-          } else {
-            alert("Failed to update warehouse: " + data.error);
-          }
-        })
-        .catch((error) => {
-          alert("Error updating warehouse: " + error.message);
-        });
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert("Failed to add warehouse: " + data.error);
+            }
+          });
+      });
+
+    // Edit Warehouse - Prefill Modal
+    document.querySelectorAll(".edit-warehouse").forEach((button) => {
+      button.addEventListener("click", function () {
+        document.getElementById("editWarehouseId").value = this.dataset.id;
+        document.getElementById("editWarehouseName").value = this.dataset.name;
+        document.getElementById("editWarehouseLocation").value =
+          this.dataset.location;
+      });
     });
 
-  // Delete Warehouse
-  document.querySelectorAll(".delete-warehouse").forEach((button) => {
-    button.addEventListener("click", function (event) {
-      event.stopPropagation(); // Prevent modal from opening
+    // Submit Edited Warehouse Data
+    document
+      .getElementById("editWarehouseForm")
+      .addEventListener("submit", function (e) {
+        e.preventDefault();
 
-      const id = this.dataset.id;
+        const id = document.getElementById("editWarehouseId").value;
+        const name = document.getElementById("editWarehouseName").value;
+        const location = document.getElementById("editWarehouseLocation").value;
+        const category = document.getElementById("editWarehouseCategory").value;
+        const description = document.getElementById(
+          "editWarehouseDescription"
+        ).value;
 
-      // Show confirmation popup before deleting
-      if (
-        !confirm(
-          "Are you sure you want to delete this warehouse? This action cannot be undone."
-        )
-      ) {
-        return; // Stop if user cancels
-      }
-
-      fetch(`/warehouses/delete/${id}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            alert("Warehouse deleted successfully!");
-            window.location.reload(); // ✅ Reload the page after deletion
-          } else {
-            alert("Failed to delete warehouse: " + data.error);
-          }
+        fetch(`/warehouses/edit/${id}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name,
+            location: location,
+            category: category,
+            description: description,
+          }),
         })
-        .catch((error) => {
-          alert("Error deleting warehouse: " + error.message);
-        });
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.success) {
+              alert("Warehouse updated successfully! ✅");
+              window.location.reload();
+            } else {
+              alert("Failed to update warehouse: " + data.error);
+            }
+          })
+          .catch((error) => {
+            alert("Error updating warehouse: " + error.message);
+          });
+      });
+
+    // Delete Warehouse
+    document.querySelectorAll(".delete-warehouse").forEach((button) => {
+      button.addEventListener("click", function (event) {
+        event.stopPropagation(); // Prevent modal from opening
+
+        const id = this.dataset.id;
+
+        // Show confirmation popup before deleting
+        if (
+          !confirm(
+            "Are you sure you want to delete this warehouse? This action cannot be undone."
+          )
+        ) {
+          return; // Stop if user cancels
+        }
+
+        fetch(`/warehouses/delete/${id}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Warehouse deleted successfully!");
+              window.location.reload(); // ✅ Reload the page after deletion
+            } else {
+              alert("Failed to delete warehouse: " + data.error);
+            }
+          })
+          .catch((error) => {
+            alert("Error deleting warehouse: " + error.message);
+          });
+      });
     });
-  });
 
-  document.querySelectorAll(".warehouse-card").forEach((card) => {
-    card.addEventListener("click", function () {
-      const warehouseId = this.dataset.id;
-      const warehouseName = this.dataset.name;
-      const warehouseLocation = this.dataset.location;
+    document.querySelectorAll(".warehouse-card").forEach((card) => {
+      card.addEventListener("click", function () {
+        const warehouseId = this.dataset.id;
+        const warehouseName = this.dataset.name;
+        const warehouseLocation = this.dataset.location;
 
-      // Set warehouse details in modal
-      document.getElementById("modalWarehouseName").textContent = warehouseName;
-      document.getElementById("modalWarehouseLocation").textContent =
-        warehouseLocation;
+        // Set warehouse details in modal
+        document.getElementById("modalWarehouseName").textContent =
+          warehouseName;
+        document.getElementById("modalWarehouseLocation").textContent =
+          warehouseLocation;
 
-      // Fetch warehouse product stock data
-      fetch(`/warehouses/${warehouseId}/stock/`)
-        .then((response) => response.json())
-        .then((data) => {
-          const warehouseProducts =
-            document.getElementById("warehouseProducts");
-          warehouseProducts.innerHTML = "";
+        // Fetch warehouse product stock data
+        fetch(`/warehouses/${warehouseId}/stock/`)
+          .then((response) => response.json())
+          .then((data) => {
+            const warehouseProducts =
+              document.getElementById("warehouseProducts");
+            warehouseProducts.innerHTML = "";
 
-          // Set total categories in warehouse
-          if (document.getElementById("modalTotalCategories")) {
-            document.getElementById("modalTotalCategories").textContent =
-              data.total_categories || 0;
-          }
+            // Set total categories in warehouse
+            if (document.getElementById("modalTotalCategories")) {
+              document.getElementById("modalTotalCategories").textContent =
+                data.total_categories || 0;
+            }
 
-          if (data.products.length === 0) {
-            warehouseProducts.innerHTML = "<p>No products available.</p>";
-          } else {
-            let productList = '<ul class="list-group">';
-            data.products.forEach((product) => {
-              productList += `
+            if (data.products.length === 0) {
+              warehouseProducts.innerHTML = "<p>No products available.</p>";
+            } else {
+              let productList = '<ul class="list-group">';
+              data.products.forEach((product) => {
+                productList += `
                   <li class="list-group-item d-flex justify-content align-items-center">
                     ${product.name} : <strong>${product.stock_keeping_unit} units</strong>
                   </li>`;
-            });
-            productList += "</ul>";
-            warehouseProducts.innerHTML = productList;
-          }
-        })
-        .catch((error) => {
-          document.getElementById("warehouseProducts").innerHTML =
-            "<p class='text-danger'>Error fetching product stock.</p>";
-        });
+              });
+              productList += "</ul>";
+              warehouseProducts.innerHTML = productList;
+            }
+          })
+          .catch((error) => {
+            document.getElementById("warehouseProducts").innerHTML =
+              "<p class='text-danger'>Error fetching product stock.</p>";
+          });
+      });
     });
-  });
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}
+</div>

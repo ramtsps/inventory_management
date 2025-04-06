@@ -113,7 +113,7 @@ from django.contrib.auth.hashers import make_password
 class Users(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
-        ('warehouse_staff', 'Warehouse Staff'),
+        ('warehouse staff', 'Warehouse Staff'),
         ('manager', 'Manager'),
         ('customer', 'Customer'),
     ]
@@ -145,19 +145,28 @@ class Users(models.Model):
         return self.name
 
 class Warehouse(models.Model):
+
     CATEGORY_CHOICES = [
-        ('general', 'General'),
-        ('electronics', 'Electronics'),
-        ('medical', 'Medical'),
-        ('agricultural', 'Agricultural'),
-        ('technology', 'Technology'),
-        ('all', 'All'),
-    ]
+    ('electronics', 'Electronics'),
+    ('furniture', 'Furniture'),
+    ('groceries', 'Groceries'),
+    ('clothing', 'Clothing'),
+    ('medical', 'Medical'),
+    ('automotive', 'Automotive'),
+    ('agricultural', 'Agricultural'),
+    ('stationery', 'Stationery'),
+    ('technology', 'Technology'),
+    ('sports_equipment', 'Sports Equipment'),
+    ('general', 'General'),
+    ('all', 'All'),
+]
+
+    
     
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='all')
-
+    description = models.TextField(blank=True, null=True)
     def __str__(self):
         return self.name
 import qrcode

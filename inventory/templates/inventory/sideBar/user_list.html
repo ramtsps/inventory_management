@@ -19,6 +19,11 @@
 
   .custom-table-header th:last-child {
     border-right: none;
+  }.role_w
+  {
+    text-transform: capitalize;
+    letter-spacing: 1px;
+    font-size: 1rem;
   }
 </style>
 <div class="container">
@@ -56,7 +61,7 @@
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.mobile_number }}</td>
-          <td>{{ user.role }}</td>
+          <td class="role_w">{{ user.role }}</td>
           <td>
             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
               ✏️ Edit

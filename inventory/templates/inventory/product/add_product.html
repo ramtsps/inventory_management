@@ -110,6 +110,16 @@
           {{ form.warehouse_location }}
         </div>
 
+        <p class="text-muted">
+          You can either capture an image using webcam or upload one manually.
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold"
+            >Upload Product Image (Optional)</label
+          >
+          {{ form.product_image }}
+        </div>
         <!-- Hidden input for captured image -->
         <input type="hidden" name="captured_image" id="captured_image_input" />
 

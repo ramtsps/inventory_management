@@ -206,24 +206,28 @@ def add_product(request):
         if form.is_valid():
             product = form.save(commit=False)
 
-            # Process the captured image (Base64 format)
+            # Prefer webcam capture
             captured_image_data = request.POST.get("captured_image")
             if captured_image_data:
                 format, imgstr = captured_image_data.split(";base64,")
                 ext = format.split("/")[-1]
                 product_image_file = ContentFile(base64.b64decode(imgstr), name=f"product_{product.stock_keeping_unit}.{ext}")
                 product.product_image = product_image_file
+            else:
+                # Fallback: use uploaded image from file input
+                product.product_image = request.FILES.get('product_image')
 
-            # Generate barcode and store in the product instance
+            # Generate barcode
             barcode_path = generate_barcode(product.stock_keeping_unit)
             product.barcode = barcode_path  
             product.save()
 
-            return redirect("inventory:product_list")  
+            return redirect("inventory:product_list")
     else:
         form = ProductForm()
 
     return render(request, "inventory/product/add_product.html", {"form": form, "barcode_url": barcode_url})
+
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     print("Product", product.description)
@@ -471,7 +475,8 @@ def update_payment_status(request):
 
 def order_success(request):
     invoice_url = request.GET.get("invoice_url", "")
-    return render(request, "inventory/order_success.html", {"invoice_url": invoice_url})
+    return render(request, "inventory/order/order_success.html", {"invoice_url": invoice_url})
+
 def create_order(request):
     if request.method == "POST":
         customer_id = request.POST.get("customer")
@@ -837,7 +842,7 @@ def edit_user(request, customer_id):
             # ✅ Secure Password Handling
             new_password = request.POST.get("password")
             if new_password:  
-                user.password = make_password(new_password)  # Hash password before saving
+                user.password = new_password  # Hash password before saving
 
             user.save()
             messages.success(request, "User updated successfully!")
