@@ -8,7 +8,8 @@ from .forms import ProductForm,CategoryForm,SupplierForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
 from django.contrib.auth.hashers import check_password
-from .models import Users,WarehouseProduct
+from .models import WarehouseProduct
+from .models import WarehouseStaff as Users
 
 def home(request):
     return render(request, "inventory/home.html")
@@ -789,7 +790,7 @@ def delete_warehouse(request, warehouse_id):
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
-from .models import Users  # Import Users model
+ # Import Users model
 import re
 def user_list(request):
     users = Users.objects.all()  # Fetch all users

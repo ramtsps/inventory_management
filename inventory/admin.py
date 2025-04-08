@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Supplier, Product, Customer, Order, Warehouse, StockMovement,Category,WarehouseProduct,Users
+from .models import Supplier, Product, Customer, Order, Warehouse, StockMovement,Category,WarehouseProduct
+from.models import WarehouseStaff as Users
 
 admin.site.site_header = " Inventory Management Administration"
 admin.site.site_title = "Inventory Management System"

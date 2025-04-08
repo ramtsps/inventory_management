@@ -110,7 +110,7 @@ from django.db import models
 from django.utils.timezone import now
 from django.contrib.auth.hashers import make_password
 
-class Users(models.Model):
+class WarehouseStaff(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('warehouse staff', 'Warehouse Staff'),
