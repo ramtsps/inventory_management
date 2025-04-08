@@ -151,7 +151,7 @@ class Warehouse(models.Model):
     ('furniture', 'Furniture'),
     ('groceries', 'Groceries'),
     ('clothing', 'Clothing'),
-    ('medical', 'Medical'),
+    ('medicine', 'Medicine'),
     ('automotive', 'Automotive'),
     ('agricultural', 'Agricultural'),
     ('stationery', 'Stationery'),
@@ -175,7 +175,7 @@ from django.core.files.base import ContentFile
 
 class WarehouseProduct(models.Model):
     name = models.CharField(max_length=100)
-    sku = models.CharField(max_length=50, unique=True)
+    sku = models.CharField(max_length=50, unique=False)
     category = models.ForeignKey("Category", on_delete=models.CASCADE)
     supplier = models.CharField(max_length=100)
     stock = models.PositiveIntegerField(default=0)

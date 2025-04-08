@@ -63,7 +63,7 @@
           <td>{{ user.mobile_number }}</td>
           <td class="role_w">{{ user.role }}</td>
           <td>
-            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.customer_id }}">
               ✏️ Edit
             </button>
            
@@ -77,7 +77,7 @@
         </tr>
 
         <!-- Edit User Modal -->
-        <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal fade" id="editUserModal{{ user.customer_id }}" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">

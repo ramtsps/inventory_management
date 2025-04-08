@@ -758,7 +758,7 @@ def clear_warehouse_session(request):
 def add_warehouse(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        Warehouse.objects.create(name=data["name"], location=data["location"],category=data["category"])
+        Warehouse.objects.create(name=data["name"], location=data["location"],category=data["category"],description=data["description"])
         return JsonResponse({"success": True})
 @csrf_exempt
 def edit_warehouse(request, warehouse_id):
@@ -769,6 +769,7 @@ def edit_warehouse(request, warehouse_id):
             warehouse.name = data['name']
             warehouse.location = data['location']
             warehouse.category=data['category']
+            warehouse.description=data['description']
             warehouse.save()
             return JsonResponse({"success": True})
         except Warehouse.DoesNotExist:
