@@ -28,11 +28,6 @@ DEBUG = "False"
 ALLOWED_HOSTS = ["inventory-management-d0ri.onrender.com","*"]
 
 
-# Always use HTTPS in production
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-
 # Application definition
 
 INSTALLED_APPS = [
