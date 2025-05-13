@@ -1,0 +1,96 @@
+{% extends 'inventory/base.html' %} {% block content %}
+
+<div class="container mt-4">
+  <h2>📷 QR Code Scanner</h2>
+  <p>Scan a product QR code to view its details.</p>
+
+  <div class="row">
+    <!-- Left Side: QR Scanner -->
+    <div class="col-md-6">
+      <div id="reader" style="width: 100%"></div>
+    </div>
+
+    <!-- Right Side: Scanned Product Info -->
+    <div class="col-md-6">
+      <div id="result" style="display: none">
+        <h5>🔍 Scanned Product Details</h5>
+        <div id="scan-output" class="card p-3 shadow-sm border border-success">
+          <!-- Product details will be loaded here -->
+        </div>
+        <!-- Scan Again button -->
+        <button id="scanAgain" class="btn btn-secondary mt-4">
+          Scan Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual start button -->
+  <button id="startScan" class="btn btn-primary mt-4">Start QR Scan</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+  function onScanSuccess(decodedText, decodedResult) {
+    try {
+      // Try to parse the QR code as JSON
+      const data = JSON.parse(decodedText);
+
+      // Check if expected fields exist
+      if (!data.name || !data.sku || !data.price) {
+        throw new Error("Missing fields");
+      }
+
+      // If everything is fine, display details
+      const details = `
+        <p><strong>📦 Product Name:</strong> ${data.name}</p>
+        <p><strong>🔢 SKU:</strong> ${data.sku}</p>
+        <p><strong>💰 Price:</strong> ₹${data.price}</p>
+        <p><strong>📍 Location:</strong> ${data.location}</p>
+        <p><strong>📝 Description:</strong> ${data.description || "N/A"}</p>
+      `;
+
+      document.getElementById("scan-output").innerHTML = details;
+      document.getElementById("result").style.display = "block";
+
+      html5QrcodeScanner.clear(); // Stop scanning after success
+    } catch (error) {
+      // Only show SweetAlert if the QR content is invalid
+      Swal.fire({
+        icon: "error",
+        title: "Invalid QR Code",
+        text: "The scanned code doesn't match the product format.",
+        confirmButtonText: "OK",
+        timer: 2500,
+      });
+    }
+  }
+
+  function onScanFailure(error) {
+    // Do nothing or log quietly to console
+    // console.warn(`Scan failed: ${error}`);
+  }
+
+  // Initialize QR Scanner
+  const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: 250,
+  });
+
+  // Add event listener to start the scan manually
+  document.getElementById("startScan").addEventListener("click", function () {
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    this.disabled = true; // Disable the button after clicking
+  });
+
+  // Add event listener for Scan Again button
+  document.getElementById("scanAgain").addEventListener("click", function () {
+    document.getElementById("result").style.display = "none"; // Hide the result
+    document.getElementById("startScan").disabled = false; // Enable the start scan button again
+    html5QrcodeScanner.clear(); // Clear previous scan session
+  });
+</script>
+
+{% endblock %}

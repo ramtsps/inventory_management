@@ -938,3 +938,7 @@ def stock_levels(request):
 def customer(request):
     users = Customer.objects.all()
     return render(request, "inventory/users.html", {"users": users})
+
+
+def qr_scanner_view(request):
+    return render(request, 'inventory/qr/qr_scanner.html')

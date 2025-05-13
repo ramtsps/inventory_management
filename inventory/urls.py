@@ -77,6 +77,8 @@ path('clear-warehouse-session/', clear_warehouse_session, name='clear_warehouse_
     path("stock-levels/", stock_levels, name="stock_levels"),
  
     path("customer/", customer, name="customer"),
+    path('qr-scanner/', views.qr_scanner_view, name='qr_scanner')
+
 
 ]
 
